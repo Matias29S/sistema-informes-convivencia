@@ -39,8 +39,10 @@ function menu_items(): array {
         $items[] = ['admin/noticias.php', 'Noticias', 'news'];
         $items[] = ['admin/eventos.php', 'Calendario', 'calendar'];
     }
-    if ($rol === 'ADMIN') {
+    if (has_permission('usuarios.crear')) {
         $items[] = ['admin/usuarios.php', 'Cuentas', 'user'];
+    }
+    if ($rol === 'ADMIN') {
         $items[] = ['admin/permisos.php', 'Permisos', 'shield'];
         $items[] = ['admin/configuracion.php', 'Configuración', 'cog'];
         $items[] = ['admin/auditoria.php', 'Auditoría', 'history'];

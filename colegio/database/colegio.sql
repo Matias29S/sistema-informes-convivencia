@@ -334,7 +334,7 @@ INSERT INTO permisos (id,modulo,descripcion) VALUES
 INSERT INTO rol_permiso (rol_id,permiso_id)
 SELECT r.id, p.id FROM roles r JOIN permisos p
 WHERE (r.id='ADMIN')
-   OR (r.id='DIRECTIVO' AND p.id IN ('informes.ver','informes.revisar','informes.resolver','consejos.registrar','estadisticas.ver','notificaciones.ver','alumnos.ver','cursos.ver'))
+   OR (r.id='DIRECTIVO' AND p.id IN ('informes.ver','informes.revisar','informes.resolver','consejos.registrar','estadisticas.ver','notificaciones.ver','alumnos.ver','alumnos.editar','cursos.ver','usuarios.ver','usuarios.crear'))
    OR (r.id='PRECEPTOR' AND p.id IN ('informes.ver','informes.revisar','consejos.registrar','alumnos.ver','alumnos.editar','cursos.ver','cursos.editar','notificaciones.ver'))
    OR (r.id='DOCENTE' AND p.id IN ('informes.crear','informes.ver','alumnos.ver','cursos.ver','notificaciones.ver'))
    OR (r.id='ALUMNO' AND p.id IN ('informes.ver','descargo.crear','notificaciones.ver'))
@@ -362,7 +362,7 @@ INSERT INTO materias (id,nombre) VALUES
 -- ---------- Usuarios de prueba ----------
 -- Contraseñas: Admin123! / Directivo123! / Preceptor123! / Docente123! / Alumno123! / Tutor123!
 INSERT INTO usuarios (id,username,email,password_hash,rol_id,nombre,apellido,dni,fecha_nacimiento,telefono,verificado,ultimo_acceso) VALUES
- (1,'admin','admin@et35.edu.ar','pbkdf2_sha256$120000$a1b2c3d4e5f60718293a4b5c6d7e8f90$3c5cd790b072ac7b81ca19a69063a559769ba26150ba1662e924854b819daaf55d7aa615ba9865d710263fec5ed81998b62028e27d4d020bef2eb4cd35413c66','ADMIN','Ana','Administradora','20000001','1980-01-01',NULL,1,NULL),
+ (1,'admin','admin@et35.edu.ar','pbkdf2_sha256$120000$a1b2c3d4e5f60718293a4b5c6d7e8f90$3c5cd790b072ac7b81ca19a69063a559769ba26150ba9865d710263fec5ed81998b62028e27d4d020bef2eb4cd35413c66','ADMIN','Ana','Administradora','20000001','1980-01-01',NULL,1,NULL),
  (2,'directivo','directivo@et35.edu.ar','pbkdf2_sha256$120000$b2c3d4e5f60718293a4b5c6d7e8f901$de21a4763a017ee1b87e6939227c5625b0e0162b657f6ffe6c697bba42a0a0c101b85d183539c1a77085998fe8d52c1ec4bf0abd85dee2cc348f4c93db027836','DIRECTIVO','Laura','Regente','20000002','1975-02-02',NULL,1,NULL),
  (3,'preceptor','preceptor@et35.edu.ar','pbkdf2_sha256$120000$c3d4e5f60718293a4b5c6d7e8f9012$9cd39023c7fe50054f0ed64ffdf89511778d12a048694acc73492ec0429408c3da0d85a36360b5e30ab7f12ee920d4158de2cb3c20e6db699c650305fbcdb7df','PRECEPTOR','María','Delgado','20000003','1982-03-03',NULL,1,NULL),
  (4,'docente','docente@et35.edu.ar','pbkdf2_sha256$120000$d4e5f60718293a4b5c6d7e8f90123$66d8d88e7bd0f65a8274c22dc97070415f89f57ca4a5c6ec798dfdac26c1dc650ab1c679fca047045e97c6831b2022855eca5dc11620c4bc1259cc73c53a9509','DOCENTE','Carlos','Ramírez','20000004','1979-04-04',NULL,1,NULL),
