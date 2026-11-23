@@ -123,19 +123,51 @@ function notify_role(string $permiso, string $titulo, string $descripcion, strin
     foreach ($st->fetchAll() as $u) notify((int)$u['id'], $titulo, $descripcion, $tipo, $enlace, true);
 }
 
-/** Genera un nombre de usuario único. */
+/** Genera un usuario legible pero con sufijo aleatorio, garantizando unicidad en BD. */
 function generar_username(string $nombre, string $apellido): string {
     global $pdo;
-    $base = strtolower(trim(preg_replace('/[^a-zA-ZáéíóúñÁÉÍÓÚÑ]/', '', $nombre . $apellido)));
-    if ($base === '') $base = 'usuario';
-    $base = mb_substr($base, 0, 16);
-    $u = $base; $i = 1;
+    $base = strtolower(trim(preg_replace('/[^a-zA-Z0-9]/', '', $nombre . $apellido)));
+    if ($base === '') $base = 'usr';
+    $base = mb_substr($base, 0, 6);
     $st = $pdo->prepare('SELECT COUNT(*) FROM usuarios WHERE username=?');
-    while (true) {
+    do {
+        // 8 caracteres hexadecimales aleatorios: difícil de repetir y fácil de leer.
+        $u = $base . '.' . bin2hex(random_bytes(4));
         $st->execute([$u]);
-        if (!$st->fetchColumn()) return $u;
-        $i++; $u = $base . $i;
+    } while ((int)$st->fetchColumn() > 0);
+    return $u;
+}
+
+/** Contraseña temporal aleatoria (evita caracteres confusos como 0/O, 1/l). */
+function generar_clave_temporal(int $longitud = 12): string {
+    $grupos = [
+        'ABCDEFGHJKLMNPQRSTUVWXYZ',
+        'abcdefghijkmnopqrstuvwxyz',
+        '23456789',
+        '!@#$%*',
+    ];
+    $todo = implode('', $grupos);
+    $clave = [];
+    foreach ($grupos as $g) $clave[] = $g[random_int(0, strlen($g) - 1)];
+    while (count($clave) < $longitud) $clave[] = $todo[random_int(0, strlen($todo) - 1)];
+    for ($i = count($clave) - 1; $i > 0; $i--) {
+        $j = random_int(0, $i);
+        [$clave[$i], $clave[$j]] = [$clave[$j], $clave[$i]];
     }
+    return implode('', $clave);
+}
+
+/** Envía usuario y contraseña temporal. La persona puede cambiarla luego desde Mi perfil. */
+function enviar_datos_acceso(string $email, string $username, string $clave, string $nombre, string $rol): bool {
+    $asunto = 'Tus datos de acceso a ' . APP_NAME;
+    $cuerpo = "Hola {$nombre}:\n\n"
+        . "Se creó una cuenta para vos con el rol {$rol}.\n\n"
+        . "Usuario: {$username}\n"
+        . "Contraseña temporal: {$clave}\n\n"
+        . "Ingresá en: " . APP_URL . "login.php\n"
+        . "Por seguridad, cambiá la contraseña desde «Mi perfil» luego de entrar.\n\n"
+        . "Si no esperabas este correo, contactá a administración.\n";
+    return Mailer::send($email, $asunto, $cuerpo);
 }
 
 function next_codigo_informe(): string {

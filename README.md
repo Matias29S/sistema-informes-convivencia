@@ -43,10 +43,25 @@ Incluye clasificación LEVE / GRAVE / MUY GRAVE / OTRA, notificaciones internas 
 ## Seguridad
 
 - Consultas preparadas (PDO), CSRF en todos los formularios, salida escapada con `e()`.
-- Contraseñas PBKDF2-SHA256 con sal; activación por token enviado por correo.
+- Contraseñas PBKDF2-SHA256 con sal; alta con usuario y contraseña temporal aleatoria enviada por correo, cambiable desde Mi perfil.
 - Permisos verificados en servidor y filtrado de datos por rol (un tutor o alumno no puede ver informes ajenos).
 - Control de intentos de login, auditoría, cambios de estado trazables y respaldos.
 
 ## Correo
 
-Por defecto `mail_mode = log`: los correos se escriben en `colegio/storage/mail.log` para poder probar activación y recuperación sin credenciales reales. Para producción, cargar SMTP desde **Admin → Configuración**. Ver [`colegio/README.md`](colegio/README.md#5-activación-de-cuentas-y-correo).
+Por defecto `mail_mode = log`: los correos con usuario y contraseña temporal se escriben en `colegio/storage/mail.log` para probar sin credenciales reales. Para producción, cargar SMTP desde **Admin → Configuración**. Ver [`colegio/README.md`](colegio/README.md#5-altas-credenciales-y-correo).
+
+## Publicación online (InfinityFree)
+
+La aplicación real se publica en un hosting con **PHP + MySQL**, no en Netlify. Paso a paso:
+
+1. Creá cuenta gratis en <https://www.infinityfree.com/> y un **subdominio** (ej. `informes-et35.infinityfreeapp.com`).
+2. En el panel, creá una base MySQL y un usuario con contraseña; anotá el nombre de la base, el usuario, la contraseña y el host MySQL que indique InfinityFree.
+3. Importá `colegio/database/colegio.sql` desde phpMyAdmin (el script contiene `DROP TABLE`: usá una base vacía).
+4. Subí por FTP **el contenido de `colegio/` a la raíz pública** (`htdocs/`). No subas la carpeta `colegio` como subcarpeta si `BASE_URL` es `/`.
+5. En `config/app.php` dejá `BASE_URL = '/'`, `APP_URL = 'https://TU-SUBDOMINIO.infinityfreeapp.com/'`.
+6. En `config/database.php` cargá host, usuario, contraseña y base del paso 2.
+7. Hacé escribibles `storage/` y `storage/uploads/` y probá el alta de un alumno.
+8. Para correo real, cargá SMTP en **Admin → Configuración**. Si el hosting gratis bloquea SMTP saliente, el sistema igual registra todo en `storage/mail.log`.
+
+La demo de Netlify queda como maqueta visual; la URL del sistema real será el subdominio de InfinityFree.

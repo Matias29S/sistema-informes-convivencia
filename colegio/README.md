@@ -142,19 +142,18 @@ colegio/
 
 ---
 
-## 5. Activación de cuentas y correo
+## 5. Altas, credenciales y correo
 
 Cuando el administrador crea una cuenta en `admin/usuarios.php`:
 
-1. Se genera un **nombre de usuario** único y la cuenta queda con `verificado = 0`.
-2. Se crea un **token temporal de activación** (vigencia de 48 hs) con `crear_token()`.
-3. Se envía un correo al usuario con el **usuario** y un enlace del tipo:
+1. Se genera un **usuario legible y único** con sufijo aleatorio, por ejemplo `juangar.a3f19c02`. Se comprueba en la base que no exista antes de usarlo.
+2. Se genera una **contraseña temporal aleatoria distinta para cada cuenta** (12 caracteres con mayúsculas, minúsculas, números y símbolos) y se guarda hasheada con PBKDF2.
+3. La cuenta se crea ya **verificada** (`verificado = 1`), así que la persona puede ingresar enseguida.
+4. Se envía por correo el **usuario y la contraseña temporal**. Si el rol es ALUMNO y se crea un tutor nuevo, ese tutor también recibe sus propias credenciales.
+5. Desde **Mi perfil** (`perfil.php`) cada persona cambia la contraseña cuando quiere, ingresando la contraseña actual y la nueva dos veces.
+6. En la lista de cuentas, el botón **Reenviar credenciales** genera una contraseña temporal nueva (invalida la anterior) y la envía otra vez por correo.
 
-   ```
-   http://localhost/colegio/activar.php?t=TOKEN_GENERADO
-   ```
-
-4. El usuario abre el enlace, ingresa su nueva contraseña dos veces y queda activado. El mismo mecanismo (`recuperar.php`) se usa para restablecer contraseñas olvidadas.
+La recuperación de contraseña olvidada (`recuperar.php`) sigue funcionando con tokens por correo.
 
 ### Modo desarrollo (por defecto)
 
@@ -164,7 +163,7 @@ Cuando el administrador crea una cuenta en `admin/usuarios.php`:
 C:\xampp\htdocs\colegio\storage\mail.log
 ```
 
-Para probar la activación: abrí el archivo, copiá el enlace `activar.php?t=...` y pegalo en el navegador. La carpeta `storage/` se crea automáticamente si no existe.
+Para probar: creá un alumno, abrí el archivo y copiá el usuario y la contraseña temporal que figuran en el correo. La carpeta `storage/` se crea automáticamente si no existe.
 
 ### Modo producción (SMTP real)
 
@@ -181,6 +180,8 @@ En **Admin → Configuración** (`admin/configuracion.php`):
 | `smtp_seguro` | `tls` (o `ssl` con puerto `465`) |
 
 Gmail requiere activar la verificación en dos pasos y generar una **contraseña de aplicación** en <https://myaccount.google.com/apppasswords>. El cliente SMTP usa `STARTTLS` + `AUTH LOGIN` y requiere la extensión `openssl` habilitada.
+
+> **Importante para hosting gratuito:** InfinityFree puede bloquear el SMTP saliente (puertos 25/465/587) en el plan gratis. Si el correo no sale, verificá esa restricción en el panel del hosting o usá un proveedor de correo por API/relay permitido. Mientras tanto, `mail_mode = log` deja todo registrado en `storage/mail.log`.
 
 ---
 
@@ -261,7 +262,7 @@ En `estadisticas.php` podés filtrar por mes, año, curso, división, categoría
   FLUSH PRIVILEGES;
   ```
 
-- Configurá `APP_URL` en `config/app.php` con la URL real (ej. `https://informes.miescuela.edu.ar/colegio/`) cuando despliegues; se usa en los enlaces de activación.
+- Configurá `APP_URL` en `config/app.php` con la URL real (ej. `https://tu-subdominio.infinityfreeapp.com/`) cuando despliegues; se usa en los correos y enlaces.
 - Usá **HTTPS** en producción (certificado Let's Encrypt o del proveedor) y redirect de HTTP a HTTPS.
 - Mantení `storage/` y `storage/uploads/` con permisos de escritura **sólo** para el usuario de Apache, y evitá servirlos públicamente. Las subidas validan MIME real con `finfo`, tamaño máximo de 5 MB y extensiones PDF/JPEG/PNG/WebP.
 - El sistema usa tokens **CSRF** en todos los POST (`csrf_field()` / `csrf_check()`) y contraseñas con **PBKDF2-SHA256** (120.000 iteraciones + salt).
@@ -287,10 +288,10 @@ Este proyecto es **PHP + MySQL** y necesita un servidor con esos componentes. **
 | **"Error de base de datos"** al abrir cualquier página | MySQL no está iniciado (XAMPP Control Panel → Start en MySQL), la base `colegio` no existe o los credenciales en `config/database.php` son incorrectos. Verificá también que el puerto 3306 no esté ocupado por otro servicio. |
 | **Página en blanco** | Error fatal de PHP oculto. Revisá `C:\xampp\php\logs\php_error_log` (o `error_log` del hosting). Para diagnosticar, activá temporalmente `display_errors = On` en `php.ini` y reiniciá Apache. También verificá que la carpeta `storage/` sea escribible. |
 | **CSS / imágenes con 404** | La carpeta debe estar en `C:\xampp\htdocs\colegio` y `BASE_URL` debe ser `/colegio/`. Comprobá que existan `assets/css/styles.css` y `assets/img/escudo.png`. Limpiá la caché del navegador (Ctrl + F5). |
-| **No llega el correo de activación** | Con `mail_mode = log`, mirá `storage/mail.log`; no se envía correo real. Si configuraste `smtp`, revisá `smtp_usuario`, `smtp_password` (contraseña de aplicación), `smtp_puerto` y que el puerto 587/465 no esté bloqueado por el firewall. |
+| **No llega el correo con las credenciales** | Con `mail_mode = log`, mirá `storage/mail.log`; no se envía correo real. Si configuraste `smtp`, revisá `smtp_usuario`, `smtp_password` (contraseña de aplicación), `smtp_puerto` y que el puerto 587/465 no esté bloqueado por el hosting. |
 | **"Token de seguridad inválido"** | La sesión expiró o el formulario se abrió en otra pestaña. Recargá la página y volvé a enviar. |
-| **No puedo iniciar sesión con un usuario nuevo** | La cuenta debe estar activada (`verificado = 1`). Buscá el enlace de activación en `storage/mail.log` o generá uno nuevo desde `admin/usuarios.php`. |
-| **El enlace de activación dice que expiró** | Los tokens duran 48 horas. Pedí uno nuevo desde la pantalla de recuperación o desde administración. |
+| **No puedo iniciar sesión con un usuario nuevo** | Buscá el usuario y la contraseña temporal en `storage/mail.log` (o en el correo recibido). Si la contraseña fue cambiada antes, usá la nueva. Si no tenés las credenciales, desde `admin/usuarios.php` usá **Reenviar credenciales**. |
+| **Olvidé la contraseña** | Usá `recuperar.php`: se envía un token por correo para definir una nueva. |
 | **Error al subir archivos** | Verificá permisos de `storage/uploads/`, que el MIME esté entre PDF/JPEG/PNG/WebP y que el archivo no supere 5 MB. |
 
 ---

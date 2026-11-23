@@ -1,20 +1,21 @@
-<?php
-/** Administración de cuentas: alta, edición, activación y reenvío de activación. */
+﻿<?php
+/** Administración de cuentas: alta, edición y envío/reenvío de credenciales. */
 require_once __DIR__ . '/../config/app.php';
 require_role('ADMIN');
 global $pdo;
 
-/** Genera un token nuevo y envía el enlace de activación (nunca la contraseña). */
-function enviar_activacion_usuario(int $usuarioId, string $email, string $username): bool {
-    $token = crear_token($usuarioId, 'activacion', 48);
-    $asunto = 'Activá tu cuenta en ' . APP_NAME;
-    $cuerpo = "Hola {$username}:\n\n"
-        . "Se creó una cuenta para vos en el Sistema de Informes de Convivencia.\n"
-        . "Usuario: {$username}\n\n"
-        . "Para definir tu contraseña ingresá al siguiente enlace (vigente por 48 horas):\n"
-        . APP_URL . 'activar.php?t=' . $token . "\n\n"
-        . "Si no esperabas este mensaje, contactá a administración.\n";
-    return Mailer::send($email, $asunto, $cuerpo);
+/** Genera una contraseña temporal nueva, la guarda hasheada y envía el correo con los datos. */
+function reenviar_credenciales_usuario(int $usuarioId): bool {
+    global $pdo;
+    $st = $pdo->prepare('SELECT email, username, nombre, rol_id FROM usuarios WHERE id=?');
+    $st->execute([$usuarioId]);
+    $u = $st->fetch();
+    if (!$u) return false;
+    $clave = generar_clave_temporal();
+    $pdo->prepare('UPDATE usuarios SET password_hash=?, verificado=1 WHERE id=?')
+        ->execute([hash_password($clave), $usuarioId]);
+    audit('REENVIAR_CREDENCIALES', 'usuarios', (string)$usuarioId, 'Nueva contraseña temporal generada');
+    return enviar_datos_acceso($u['email'], $u['username'], $clave, $u['nombre'], $u['rol_id']);
 }
 
 /** Valida una fecha en formato YYYY-MM-DD. */
@@ -114,15 +115,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         $username = generar_username($nombre, $apellido);
-        $passwordHash = hash_password(bin2hex(random_bytes(16))); // Contraseña temporal: el usuario la define al activar.
-        $tutorToken = '';
+        $claveTemp = generar_clave_temporal();
+        $passwordHash = hash_password($claveTemp);
         $tutorUsernameNew = '';
+        $tutorClaveTemp = '';
 
         try {
             $pdo->beginTransaction();
             $st = $pdo->prepare('INSERT INTO usuarios
                 (username, email, password_hash, rol_id, nombre, apellido, dni, fecha_nacimiento, telefono, verificado, activo)
-                VALUES (?,?,?,?,?,?,?,?,?,0,1)');
+                VALUES (?,?,?,?,?,?,?,?,?,1,1)');
             $st->execute([$username, $email, $passwordHash, $rol, $nombre, $apellido, $dni,
                           $rol === 'ALUMNO' ? $fechaNac : null, $telefono]);
             $usuarioId = (int)$pdo->lastInsertId();
@@ -147,16 +149,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 } else {
                     $tutorUsernameNew = generar_username($tutorNombre, $tutorApellido);
+                    $tutorClaveTemp = generar_clave_temporal();
                     $st = $pdo->prepare('INSERT INTO usuarios
                         (username, email, password_hash, rol_id, nombre, apellido, dni, verificado, activo)
-                        VALUES (?,?,?,?,?,?,?,0,1)');
-                    $st->execute([$tutorUsernameNew, $tutorEmail, hash_password(bin2hex(random_bytes(16))),
+                        VALUES (?,?,?,?,?,?,?,1,1)');
+                    $st->execute([$tutorUsernameNew, $tutorEmail, hash_password($tutorClaveTemp),
                                   'TUTOR', $tutorNombre, $tutorApellido, $tutorDni]);
                     $tutorUserNewId = (int)$pdo->lastInsertId();
                     $st = $pdo->prepare('INSERT INTO tutores (usuario_id) VALUES (?)');
                     $st->execute([$tutorUserNewId]);
                     $tutorIdRow = (int)$pdo->lastInsertId();
-                    $tutorToken = crear_token($tutorUserNewId, 'activacion', 48);
                     $tutorId = $tutorUserNewId;
                 }
 
@@ -178,18 +180,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             redirect('admin/usuarios.php?form=nuevo');
         }
 
-        $enviado = enviar_activacion_usuario($usuarioId, $email, $username);
-        if ($tutorToken !== '') {
-            $cuerpoTutor = "Hola {$tutorUsernameNew}:\n\nSe creó una cuenta de tutor para vos.\n"
-                . "Usuario: {$tutorUsernameNew}\n\nActivala en (48 horas):\n"
-                . APP_URL . 'activar.php?t=' . $tutorToken . "\n";
-            Mailer::send($tutorEmail, 'Activá tu cuenta de tutor en ' . APP_NAME, $cuerpoTutor);
+        $enviado = enviar_datos_acceso($email, $username, $claveTemp, $nombre, $rol);
+        $enviadoTutor = true;
+        if ($tutorUsernameNew !== '') {
+            $enviadoTutor = enviar_datos_acceso($tutorEmail, $tutorUsernameNew, $tutorClaveTemp, $tutorNombre, 'TUTOR');
         }
         audit('CREAR_CUENTA', 'usuarios', (string)$usuarioId, "Alta de cuenta {$username} ({$rol})");
         clear_old();
-        flash($enviado ? 'ok' : 'info',
-            $enviado ? 'Cuenta creada y correo de activación enviado.'
-                     : 'Cuenta creada, pero no se pudo enviar el correo. Usá «Reenviar activación».');
+        flash($enviado && $enviadoTutor ? 'ok' : 'info',
+            $enviado && $enviadoTutor ? 'Cuenta creada y credenciales enviadas por correo.'
+                                      : 'Cuenta creada, pero no se pudo enviar algún correo. Usá «Reenviar credenciales».');
         redirect('admin/usuarios.php');
     }
 
@@ -285,17 +285,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($accion === 'reenviar') {
         $id = (int)($_POST['id'] ?? 0);
-        $st = $pdo->prepare('SELECT email, username FROM usuarios WHERE id=?');
-        $st->execute([$id]);
-        $usuario = $st->fetch();
-        if (!$usuario) {
-            flash('err', 'La cuenta no existe.');
-        } else {
-            $enviado = enviar_activacion_usuario($id, $usuario['email'], $usuario['username']);
-            audit('REENVIAR_ACTIVACION', 'usuarios', (string)$id, 'Nuevo token de activación generado');
-            flash($enviado ? 'ok' : 'err',
-                $enviado ? 'Correo de activación reenviado.' : 'No se pudo enviar el correo. Revisá la configuración de correo.');
-        }
+        $enviado = reenviar_credenciales_usuario($id);
+        flash($enviado ? 'ok' : 'err',
+            $enviado ? 'Nueva contraseña temporal generada y enviada por correo.'
+                     : 'No se pudo enviar el correo o la cuenta no existe. Revisá la configuración de correo.');
         redirect('admin/usuarios.php');
     }
 }
@@ -348,13 +341,13 @@ $rolForm = old('rol', $editar['rol_id'] ?? 'ALUMNO');
 layout_header('Administración de cuentas');
 ?>
 <h1>Cuentas de usuario</h1>
-<p class="muted">Alta de cuentas para cualquier rol, edición, activación y reenvío del enlace de activación.</p>
+<p class="muted">Alta de cuentas para cualquier rol, edición y reenvío de credenciales por correo.</p>
 
 <?php if (($_GET['form'] ?? '') === 'nuevo'): ?>
 <div class="card">
  <h2>Nueva cuenta</h2>
  <?php if ($erroresForm): ?><div class="alert err"><?= e(implode(' ', $erroresForm)) ?></div><?php endif; ?>
- <p class="muted">La contraseña la define cada persona desde el enlace de activación que se envía por correo.</p>
+ <p class="muted">Se generan usuario y contraseña temporal aleatorios y se envían por correo. Cada persona puede cambiar la contraseña desde Mi perfil.</p>
  <form method="post"><?= csrf_field() ?><input type="hidden" name="accion" value="crear">
   <div class="grid g3">
    <div><label for="rol">Rol</label>
@@ -389,7 +382,7 @@ layout_header('Administración de cuentas');
     <div><label for="relacion">Relación</label><input id="relacion" name="relacion" class="input" placeholder="Madre, Padre, Tutor…" value="<?= e(old('relacion')) ?>"></div>
    </div>
   </fieldset>
-  <p><button class="btn">Crear cuenta y enviar activación</button>
+  <p><button class="btn">Crear cuenta y enviar credenciales</button>
    <a class="btn g" href="<?= e(url('admin/usuarios.php')) ?>">Cancelar</a></p>
  </form>
 </div>
@@ -447,13 +440,13 @@ layout_header('Administración de cuentas');
     <td><?= e($c['email']) ?></td>
     <td><?= e($c['rol_nombre']) ?></td>
     <td><span class="pill <?= $c['activo'] ? 'ok' : 'err' ?>"><?= $c['activo'] ? 'Activa' : 'Desactivada' ?></span>
-        <br><small><?= $c['verificado'] ? 'Verificada' : 'Pendiente de activación' ?></small></td>
+        <br><small><?= $c['verificado'] ? 'Credenciales enviadas' : 'Pendiente' ?></small></td>
     <td><?= e($c['ultimo_acceso'] ?: '—') ?></td>
     <td>
      <div class="btn-row">
       <a class="btn s" href="<?= e(url('admin/usuarios.php?editar=' . $c['id'])) ?>">Editar</a>
       <form method="post" style="display:inline"><?= csrf_field() ?><input type="hidden" name="accion" value="reenviar"><input type="hidden" name="id" value="<?= (int)$c['id'] ?>">
-       <button class="btn s" <?= $c['verificado'] ? 'disabled title="La cuenta ya está verificada"' : '' ?>>Reenviar activación</button></form>
+       <button class="btn s" <?= $c['verificado'] ? 'title="Genera una nueva contraseña temporal"' : '' ?>>Reenviar credenciales</button></form>
       <?php if ((int)$c['id'] !== (int)($_SESSION['user_id'] ?? 0)): ?>
        <form method="post" style="display:inline" data-confirm="¿Seguro que desea <?= $c['activo'] ? 'desactivar' : 'activar' ?> esta cuenta?"><?= csrf_field() ?>
         <input type="hidden" name="accion" value="<?= $c['activo'] ? 'desactivar' : 'activar' ?>"><input type="hidden" name="id" value="<?= (int)$c['id'] ?>">
