@@ -171,7 +171,7 @@ En **Admin → Configuración** (`admin/configuracion.php`):
 
 | Clave | Valor de ejemplo |
 |---|---|
-| `mail_mode` | `smtp`, `mail` (usa `mail()` del hosting) o `log` |
+| `mail_mode` | `smtp`, `mail` (usa `mail()` del hosting), `formsubmit` (sin contraseña) o `log` |
 | `smtp_host` | `smtp.gmail.com` |
 | `smtp_puerto` | `587` |
 | `smtp_usuario` | `tu-cuenta@gmail.com` |
@@ -181,7 +181,7 @@ En **Admin → Configuración** (`admin/configuracion.php`):
 
 Gmail requiere activar la verificación en dos pasos y generar una **contraseña de aplicación** en <https://myaccount.google.com/apppasswords>. El cliente SMTP usa `STARTTLS` + `AUTH LOGIN` y requiere la extensión `openssl` habilitada.
 
-> **Importante para hosting gratuito:** InfinityFree puede bloquear el SMTP saliente (puertos 25/465/587) en el plan gratis. Si el correo no sale, verificá esa restricción en el panel del hosting o usá un proveedor de correo por API/relay permitido. Mientras tanto, `mail_mode = log` deja todo registrado en `storage/mail.log`.
+> **Importante para hosting gratuito:** InfinityFree bloquea `mail()` y puede bloquear SMTP saliente (puertos 25/465/587) en el plan gratis. Una alternativa sin contraseñas es `mail_mode = formsubmit`: el sistema envía el correo por HTTP a FormSubmit.co. Cada destinatario debe confirmar **una sola vez** el enlace “Activate Form” que recibe; a partir de ahí recibe los correos normalmente. Si todavía no confirmó, el envío devuelve `false` y conviene dejar `mail_mode = log` para no perder las credenciales.
 
 ---
 

@@ -53,7 +53,7 @@ Incluye clasificación LEVE / GRAVE / MUY GRAVE / OTRA, notificaciones internas 
 
 ## Correo
 
-Por defecto `mail_mode = log`: los correos con usuario y contraseña temporal se escriben en `colegio/storage/mail.log` para probar sin credenciales reales. Para producción, cargar SMTP desde **Admin → Configuración**. Ver [`colegio/README.md`](colegio/README.md#5-altas-credenciales-y-correo).
+En producción se usa `mail_mode = formsubmit`: los correos con usuario y contraseña temporal salen por FormSubmit.co sin necesidad de SMTP ni contraseñas (cada destinatario confirma una vez). También están disponibles los modos `smtp`, `mail` y `log`. Ver [`colegio/README.md`](colegio/README.md#5-altas-credenciales-y-correo).
 
 ## Publicación online (InfinityFree)
 

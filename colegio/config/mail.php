@@ -11,6 +11,7 @@ class Mailer {
 
         if ($modo === 'smtp') return self::smtp($para, $asunto, $cuerpo, $desde);
         if ($modo === 'mail') return self::php_mail($para, $asunto, $cuerpo, $desde);
+        if ($modo === 'formsubmit') return self::formsubmit($para, $asunto, $cuerpo, $desde);
 
         // Modo desarrollo: se guarda en storage/mail.log para poder comprobar los envíos.
         $dir = dirname(__DIR__) . '/storage';
@@ -18,6 +19,34 @@ class Mailer {
         $linea = '[' . date('Y-m-d H:i:s') . "] PARA: {$para} | ASUNTO: {$asunto}\n";
         $linea .= $cuerpo . "\n" . str_repeat('-', 70) . "\n";
         return (bool)file_put_contents($dir . '/mail.log', $linea, FILE_APPEND | LOCK_EX);
+    }
+
+    /** Envío por FormSubmit.co: no requiere SMTP ni contraseña, pero cada destinatario se activa una vez. */
+    private static function formsubmit(string $para, string $asunto, string $cuerpo, string $desde): bool {
+        $url = 'https://formsubmit.co/ajax/' . rawurlencode($para);
+        $payload = json_encode([
+            '_subject' => $asunto,
+            '_from' => $desde,
+            'mensaje' => $cuerpo,
+        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        if ($payload === false) return false;
+        $ctx = stream_context_create([
+            'http' => [
+                'method' => 'POST',
+                'header' => "Content-Type: application/json\r\nAccept: application/json\r\n"
+                    . "Origin: " . APP_URL . "\r\nReferer: " . APP_URL . "\r\n",
+                'content' => $payload,
+                'timeout' => 25,
+                'ignore_errors' => true,
+            ],
+            'ssl' => ['verify_peer' => true, 'verify_peer_name' => true],
+        ]);
+        $resp = @file_get_contents($url, false, $ctx);
+        if ($resp === false) return false;
+        $data = json_decode($resp, true);
+        if (!is_array($data)) return false;
+        $ok = $data['success'] ?? false;
+        return filter_var($ok, FILTER_VALIDATE_BOOLEAN);
     }
 
     /** Envío con la función mail() del servidor (útil en hosting compartido que lo habilita). */
