@@ -2,6 +2,8 @@
 /** Envío de correos: modo log (desarrollo) o SMTP real (producción). */
 
 class Mailer {
+    private static $ultimaRespuesta = '';
+
     public static function send(string $para, string $asunto, string $cuerpo): bool {
         $para = trim($para);
         if (!es_email($para)) return false;
@@ -11,18 +13,33 @@ class Mailer {
 
         if ($modo === 'smtp') return self::smtp($para, $asunto, $cuerpo, $desde);
         if ($modo === 'mail') return self::php_mail($para, $asunto, $cuerpo, $desde);
-        if ($modo === 'formsubmit') return self::formsubmit($para, $asunto, $cuerpo, $desde);
+
+        if ($modo === 'formsubmit') {
+            $ok = self::formsubmit($para, $asunto, $cuerpo, $desde);
+            // Aunque el correo falle, las credenciales quedan registradas para entregarlas a mano.
+            self::registrar($para, $asunto, $cuerpo, $ok ? 'OK' : 'FALLO: ' . self::$ultimaRespuesta);
+            return $ok;
+        }
 
         // Modo desarrollo: se guarda en storage/mail.log para poder comprobar los envíos.
+        self::registrar($para, $asunto, $cuerpo, 'LOG');
+        return true;
+    }
+
+    /** Guarda todo intento de envío en storage/mail.log con su resultado. */
+    private static function registrar(string $para, string $asunto, string $cuerpo, string $resultado): void {
         $dir = dirname(__DIR__) . '/storage';
-        if (!is_dir($dir)) mkdir($dir, 0755, true);
-        $linea = '[' . date('Y-m-d H:i:s') . "] PARA: {$para} | ASUNTO: {$asunto}\n";
+        if (!is_dir($dir)) @mkdir($dir, 0755, true);
+        $linea = '[' . date('Y-m-d H:i:s') . "] PARA: {$para} | ASUNTO: {$asunto} | RESULTADO: {$resultado}\n";
         $linea .= $cuerpo . "\n" . str_repeat('-', 70) . "\n";
-        return (bool)file_put_contents($dir . '/mail.log', $linea, FILE_APPEND | LOCK_EX);
+        @file_put_contents($dir . '/mail.log', $linea, FILE_APPEND | LOCK_EX);
     }
 
     /** Envío por FormSubmit.co: no requiere SMTP ni contraseña, pero cada destinatario se activa una vez. */
     private static function formsubmit(string $para, string $asunto, string $cuerpo, string $desde): bool {
+        self::$ultimaRespuesta = '';
+        // FormSubmit puede tardar casi un minuto en responder: no cortar el envío por el límite de PHP.
+        if (function_exists('set_time_limit')) @set_time_limit(180);
         $url = 'https://formsubmit.co/ajax/' . rawurlencode($para);
         $payload = json_encode([
             '_subject' => $asunto,
@@ -36,15 +53,22 @@ class Mailer {
                 'header' => "Content-Type: application/json\r\nAccept: application/json\r\n"
                     . "Origin: " . APP_URL . "\r\nReferer: " . APP_URL . "\r\n",
                 'content' => $payload,
-                'timeout' => 25,
+                'timeout' => 90,
                 'ignore_errors' => true,
             ],
             'ssl' => ['verify_peer' => true, 'verify_peer_name' => true],
         ]);
         $resp = @file_get_contents($url, false, $ctx);
-        if ($resp === false) return false;
+        if ($resp === false) {
+            self::$ultimaRespuesta = 'sin respuesta de FormSubmit';
+            return false;
+        }
         $data = json_decode($resp, true);
-        if (!is_array($data)) return false;
+        if (!is_array($data)) {
+            self::$ultimaRespuesta = 'respuesta inválida';
+            return false;
+        }
+        self::$ultimaRespuesta = (string)($data['message'] ?? 'respuesta sin mensaje');
         $ok = $data['success'] ?? false;
         return filter_var($ok, FILTER_VALIDATE_BOOLEAN);
     }
