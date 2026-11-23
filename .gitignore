@@ -1,0 +1,19 @@
+# Archivos generados en tiempo de ejecución
+colegio/storage/*.log
+colegio/storage/uploads/*
+!colegio/storage/uploads/.gitkeep
+colegio/storage/respaldos/*
+!colegio/storage/respaldos/.gitkeep
+
+# Java / Gradle (prototipo legacy)
+backend/build/
+backend/.gradle/
+backend/data/
+bin/
+*.class
+.gradle/
+
+# Sistema operativo / editor
+Thumbs.db
+.DS_Store
+*.swp

@@ -1,0 +1,1 @@
+<?php require_once __DIR__ . '/../config/app.php'; require_role('ALUMNO'); $id = $_GET['id'] ?? ''; redirect('informes/descargo.php' . ($id ? '?id=' . urlencode($id) : ''));

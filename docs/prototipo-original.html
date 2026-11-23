@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Informes de Conducta Escolar</title>
+<style>
+:root{color-scheme:light dark;--bg:light-dark(#f1f1f2,#121314);--sf:light-dark(#ffffff,#1c1e20);--tx:light-dark(#1f2226,#f1f2f3);--mu:light-dark(#656b72,#a3a8ae);--ln:light-dark(#d4d6d9,#34383c);--ac:light-dark(#b3121f,#ff6b74);--ac2:light-dark(#fbe7e9,#3a1b1f);--ok:light-dark(#ffffff,#1c1e20);--ok2:light-dark(#3f4349,#d3d6da);--wa:light-dark(#5a6067,#b9bec4);--wa2:light-dark(#e6e7e9,#2b2e32);--on:light-dark(#ffffff,#1c1e20);padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+:root[data-theme=dark]{color-scheme:dark}:root[data-theme=light]{color-scheme:light}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--sf);z-index:10}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;background:var(--sf);border-bottom:1px solid var(--ln);padding:.6rem 1rem 0}
+.bar{display:flex;gap:.6rem;align-items:center;justify-content:space-between;max-width:1100px;margin:0 auto .5rem}
+h1{font:700 1.1rem/1.2 Georgia,"Times New Roman",serif;margin:0}
+.pill{border:1px solid var(--ln);background:var(--ok2);color:var(--ok);border-radius:99px;padding:.25rem .75rem;font:600 .8rem system-ui;cursor:pointer}.pill.off{background:var(--ac2);color:var(--ac);border-color:var(--ac)}
+select,textarea,input,button{font:inherit;color:inherit}
+select,textarea,input{width:100%;background:var(--bg);border:1px solid var(--ln);border-radius:6px;padding:.55rem .65rem}
+textarea{min-height:92px;resize:vertical}:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.rol{display:flex;gap:.6rem;align-items:center;width:100%;margin:0;font-weight:600}
+nav{display:flex;max-width:1100px;margin:0 auto}
+nav button{flex:1;background:none;border:0;border-bottom:3px solid transparent;padding:.6rem .3rem;font-weight:600;color:var(--mu);cursor:pointer}
+nav button[aria-current=page]{color:var(--ac);border-color:var(--ac)}
+main{max-width:1100px;margin:0 auto;padding:1rem}
+.btn{background:var(--ac);color:var(--on);border:0;border-radius:6px;padding:.6rem 1rem;font-weight:600;cursor:pointer}.btn.g{background:none;color:var(--ac);border:1px solid var(--ln)}
+.row{display:block;width:100%;text-align:left;background:var(--sf);border:1px solid var(--ln);border-left:5px solid var(--ac);border-radius:8px;padding:.7rem .9rem;margin:0 0 .6rem;cursor:pointer}
+.row.EN_SUSPENSO{border-left-color:#9aa0a7}.row.RESUELTO{border-left-color:var(--ok2)}.row b{display:block}.mu{color:var(--mu);font-size:.85rem}
+.b{display:inline-block;border-radius:99px;padding:0 .55rem;font-size:.78rem;font-weight:600;background:var(--ac2);color:var(--ac)}.b.EN_SUSPENSO{background:var(--wa2);color:var(--wa)}.b.RESUELTO{background:var(--ok2);color:var(--ok)}
+.chips{display:flex;gap:.4rem;flex-wrap:wrap;margin:0 0 .8rem}.chips button{border:1px solid var(--ln);background:var(--sf);border-radius:99px;padding:.3rem .8rem;cursor:pointer}
+.chips button[aria-pressed=true]{background:var(--ac);color:var(--on);border-color:var(--ac)}
+.pan{background:var(--sf);border:1px solid var(--ln);border-radius:8px;padding:.9rem;margin:0 0 .8rem}.pan h3{margin:0 0 .4rem;font-size:.95rem}
+label{display:block;font-weight:600;margin:.6rem 0 .25rem}.split{display:grid;gap:1rem}
+@media(min-width:900px){.split{grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);align-items:start}.acw{position:sticky;top:8.5rem}}
+pre{overflow-x:auto;background:var(--bg);border:1px solid var(--ln);border-radius:6px;padding:.7rem;font:12px/1.45 ui-monospace,Menlo,Consolas,monospace;margin:.5rem 0}
+code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.85em}summary{cursor:pointer}.sc{overflow-x:auto}
+.api{width:100%;border-collapse:collapse;font-size:.85rem}.api td,.api th{border-bottom:1px solid var(--ln);padding:.35rem .5rem;text-align:left;vertical-align:top}
+#t{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(1rem + env(safe-area-inset-bottom,0px));background:var(--tx);color:var(--bg);padding:.6rem 1rem;border-radius:8px;z-index:20;max-width:90vw}
+.acta{background:#fff;color:#111;font:13px/1.5 Georgia,"Times New Roman",serif;border:1px solid var(--ln);padding:1.4rem;max-width:760px;margin:0 auto}
+.acta header{display:flex;gap:.8rem;align-items:center;border-bottom:2px solid #111;padding-bottom:.6rem}
+.esc{flex:none;width:46px;height:46px;border:2px solid #111;border-radius:50%;display:grid;place-items:center;font:700 1.3rem Georgia,serif}
+.acta h2{margin:0;font-size:1.05rem}.acta h3{text-align:center;margin:.9rem 0 .5rem;font-size:1rem;text-decoration:underline}
+.acta h4{margin:.8rem 0 .2rem;font-size:.9rem;border-bottom:1px solid #999}
+.acta table{width:100%;border-collapse:collapse}.acta td{border:1px solid #888;padding:.25rem .45rem;vertical-align:top}.acta td:nth-child(odd){background:#f0f0f0;font-weight:700;width:19%}
+.acta p{margin:.2rem 0;white-space:pre-wrap}
+.firmas{display:grid;grid-template-columns:repeat(3,1fr);gap:.8rem;margin-top:2.2rem}.firmas div{border-top:1px solid #111;padding-top:.2rem;text-align:center;font-size:.8rem}
+@media print{@page{size:A4;margin:14mm}body{background:#fff}.np{display:none!important}.split{display:block}.acta{border:0;padding:0;max-width:none}.acta h4{break-after:avoid}.firmas{break-inside:avoid}}
+</style></head><body>
+<div id="app"></div><div id="t" class="np" role="status" hidden></div>
+<template id="arq">
+<details class="pan" open><summary><b>Stack y capas</b></summary>
+<p><b>Frontend:</b> Vite, JavaScript vanilla y CSS3 (el mismo stack de Nexus), mobile-first. PWA con Service Worker e IndexedDB: cada guardado entra en una cola que se reenvía a <code>POST /api/v1/sync</code> al volver la conexión, de forma idempotente por <code>client_uuid</code>.</p>
+<p><b>Backend:</b> Spring Boot, Java 17 y Gradle. Capas <code>controller → service → repository</code>; Spring Security como OAuth2 Resource Server (OIDC de la cuenta BUE) con el rol dentro del JWT. Las reglas de negocio viven solo en <code>service</code>.</p>
+<p><b>Persistencia:</b> PostgreSQL con Row Level Security, en Docker Compose detrás de Nginx. Alumnos, personal y cursos se leen de Nexus por su API Gateway (<code>x-api-key</code> de solo lectura).</p>
+<p><b>PDF:</b> plantilla Thymeleaf con HTML y CSS <code>@page</code> A4, convertida en el servidor con OpenHTMLtoPDF. La vista oficial de esta página usa el mismo maquetado.</p></details>
+<details class="pan"><summary><b>Modelo entidad-relación (3FN)</b></summary><pre>usuarios 1 — 1 profesores_personal       personal institucional
+usuarios 1 — 0..1 alumnos                cuenta de la familia
+alumnos 1 — N matriculas                 histórico por ciclo: curso y división
+matriculas 1 — N informes                el informe cuelga de la matrícula
+profesores_personal 1 — N informes       autor
+informes 1 — 3 intervenciones            UNIQUE (informe_id, rol)
+informes 1 — 0..1 descargos
+informes 1 — N notificaciones_acuse</pre>
+<p class="mu">1FN: valores atómicos, sin grupos repetidos. 2FN: cada tabla depende de su clave completa. 3FN: curso, turno y preceptor viven en <code>matriculas</code>, no en alumnos ni en informes. El cambio de año agrega una matrícula y conserva el historial.</p></details>
+<details class="pan"><summary><b>DDL PostgreSQL</b></summary><pre>CREATE TABLE usuarios(
+ id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+ email_bue VARCHAR(120) NOT NULL UNIQUE,
+ rol VARCHAR(10) NOT NULL CHECK(rol IN('PROFESOR','PAT','REGENTE','PRECEPTOR','FAMILIA')),
+ activo BOOLEAN NOT NULL DEFAULT TRUE);
+CREATE TABLE profesores_personal(
+ id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+ usuario_id UUID NOT NULL UNIQUE REFERENCES usuarios(id) ON DELETE RESTRICT,
+ apellido VARCHAR(60) NOT NULL, nombre VARCHAR(60) NOT NULL, cargo VARCHAR(30) NOT NULL);
+CREATE TABLE alumnos(
+ id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+ dni VARCHAR(10) NOT NULL UNIQUE, legajo VARCHAR(15) NOT NULL UNIQUE,
+ apellido VARCHAR(60) NOT NULL, nombre VARCHAR(60) NOT NULL,
+ email_familia VARCHAR(120) NOT NULL,
+ usuario_id UUID UNIQUE REFERENCES usuarios(id) ON DELETE SET NULL,
+ estado VARCHAR(10) NOT NULL DEFAULT 'ACTIVO' CHECK(estado IN('ACTIVO','EGRESADO'))); -- EGRESADO: solo lectura
+CREATE TABLE matriculas(
+ id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+ alumno_id UUID NOT NULL REFERENCES alumnos(id) ON DELETE RESTRICT,
+ ciclo SMALLINT NOT NULL, curso SMALLINT NOT NULL, division VARCHAR(3) NOT NULL, turno VARCHAR(10) NOT NULL,
+ preceptor_id UUID REFERENCES profesores_personal(id), pat_id UUID REFERENCES profesores_personal(id),
+ UNIQUE(alumno_id,ciclo));
+CREATE TABLE informes(
+ id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+ matricula_id UUID NOT NULL REFERENCES matriculas(id) ON DELETE RESTRICT,
+ autor_id UUID NOT NULL REFERENCES profesores_personal(id) ON DELETE RESTRICT,
+ categoria VARCHAR(15) NOT NULL CHECK(categoria IN('DISCIPLINA','VESTIMENTA','RENDIMIENTO','SALUD','SOCIOFAMILIAR')),
+ estado VARCHAR(11) NOT NULL DEFAULT 'ACTIVO' CHECK(estado IN('ACTIVO','EN_SUSPENSO','RESUELTO')),
+ hecho TEXT NOT NULL, ocurrido_en TIMESTAMPTZ NOT NULL,
+ creado_en TIMESTAMPTZ NOT NULL DEFAULT now(),
+ client_uuid UUID UNIQUE); -- idempotencia de la sincronización offline
+CREATE TABLE intervenciones(
+ id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+ informe_id UUID NOT NULL REFERENCES informes(id) ON DELETE CASCADE,
+ rol VARCHAR(10) NOT NULL CHECK(rol IN('PROFESOR','REGENTE','PAT')),
+ texto TEXT NOT NULL DEFAULT '', autor_id UUID REFERENCES profesores_personal(id),
+ actualizado_en TIMESTAMPTZ NOT NULL DEFAULT now(),
+ UNIQUE(informe_id,rol));
+CREATE TABLE descargos(
+ id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+ informe_id UUID NOT NULL UNIQUE REFERENCES informes(id) ON DELETE CASCADE,
+ texto TEXT NOT NULL, presentado_en TIMESTAMPTZ NOT NULL DEFAULT now());
+CREATE TABLE notificaciones_acuse(
+ id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+ informe_id UUID NOT NULL REFERENCES informes(id) ON DELETE CASCADE,
+ destinatario VARCHAR(120) NOT NULL,
+ enviado_en TIMESTAMPTZ NOT NULL DEFAULT now(), leido_en TIMESTAMPTZ);
+CREATE INDEX ix_informes_matricula ON informes(matricula_id,estado);
+CREATE INDEX ix_informes_purga ON informes(creado_en); -- purga: creado_en &lt; now() - INTERVAL '2 years'
+CREATE INDEX ix_acuse_pendiente ON notificaciones_acuse(informe_id) WHERE leido_en IS NULL;</pre></details>
+<details class="pan"><summary><b>API REST v1</b></summary><div class="sc"><table class="api"><tr><th>Método</th><th>Ruta</th><th>Respuesta</th></tr>
+<tr><td>POST</td><td>/api/v1/informes</td><td>201 con id y estado ACTIVO</td></tr>
+<tr><td>GET</td><td>/api/v1/informes?estado=&amp;curso=</td><td>200 con lista paginada</td></tr>
+<tr><td>GET</td><td>/api/v1/informes/:id</td><td>200 con intervenciones, descargo y acuse</td></tr>
+<tr><td>PUT</td><td>/api/v1/informes/:id/intervenciones/:rol</td><td>200; 403 si el rol no coincide</td></tr>
+<tr><td>PUT</td><td>/api/v1/informes/:id/estado</td><td>200; no existe DELETE</td></tr>
+<tr><td>POST</td><td>/api/v1/informes/:id/descargo</td><td>201; solo Alumno/Padre</td></tr>
+<tr><td>POST</td><td>/api/v1/informes/:id/acuse</td><td>200; registra leido_en</td></tr>
+<tr><td>GET</td><td>/api/v1/informes/:id/pdf</td><td>200 application/pdf, como adjunto</td></tr>
+<tr><td>POST</td><td>/api/v1/sync</td><td>200; aplica la cola offline</td></tr></table></div></details>
+<details class="pan"><summary><b>Backend en Java (Spring Boot)</b></summary><pre>@RestController @RequestMapping("/api/v1/informes")
+class InformeController {
+  @PostMapping @PreAuthorize("hasRole('PROFESOR')")
+  ResponseEntity&lt;InformeDto&gt; crear(@Valid @RequestBody NuevoInforme req, Principal p) {
+    var dto = service.crear(req, p.getName());   // idempotente por clientUuid
+    return ResponseEntity.created(URI.create("/api/v1/informes/" + dto.id())).body(dto);
+  }
+  @PutMapping("/{id}/intervenciones/{rol}") @PreAuthorize("hasRole(#rol.name())")
+  InformeDto intervenir(@PathVariable UUID id, @PathVariable Rol rol, @RequestBody TextoDto body) {
+    return service.guardarIntervencion(id, rol, body.texto());
+  }
+  @GetMapping(value = "/{id}/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
+  ResponseEntity&lt;byte[]&gt; pdf(@PathVariable UUID id) {
+    return ResponseEntity.ok()
+      .header("Content-Disposition", "attachment; filename=informe-" + id + ".pdf")
+      .body(pdfService.render(id));   // Thymeleaf + OpenHTMLtoPDF
+  }
+}</pre></details>
+</template>
+<script>
+const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const ESC='Escuela Secundaria N.º 1',MI='46.456.789';
+const CATS=['Disciplina','Vestimenta','Rendimiento','Salud','Sociofamiliar'];
+const ROLES={PROFESOR:'Profesor',PAT:'PAT',REGENTE:'Regente/Subregente',PRECEPTOR:'Preceptor/DOE/Directivo',FAMILIA:'Alumno/Padre'};
+const EST={ACTIVO:'Activo',EN_SUSPENSO:'En suspenso',RESUELTO:'Resuelto'};
+const AL=[['Rodríguez, Mateo','46.123.456','3° 2ª','Prec. Ruiz','Prof. Díaz'],['Fernández, Lucía',MI,'2° 1ª','Prec. Gómez','Prof. Luna'],['Acosta, Tomás','45.789.012','5° 3ª','Prec. Ruiz','Prof. Paz'],['Benítez, Camila','47.012.345','1° 1ª','Prec. Gómez','Prof. Luna']];
+const mk=(id,a,cat,ts,hecho,estado,o={})=>({id,al:AL[a][0],dni:AL[a][1],cur:AL[a][2],prec:AL[a][3],pat:AL[a][4],cat,ts,hecho,estado,desc:'',int:{PROFESOR:'',REGENTE:'',PAT:''},mail:{env:ts,leido:null},...o});
+const seed=()=>[
+ mk('INF-0003',0,'Sociofamiliar','2024-04-12T08:30','Inasistencias reiteradas sin justificar durante tres semanas.','RESUELTO',{mail:{env:'2024-04-12T08:40',leido:'2024-04-13T19:00'},int:{PROFESOR:'Se contactó a la familia.',REGENTE:'Se acordó un seguimiento quincenal.',PAT:'Plan de acompañamiento cumplido.'}}),
+ mk('INF-0002',1,'Rendimiento','2026-10-14T10:15','No entregó los trabajos prácticos de los últimos dos trimestres.','EN_SUSPENSO',{int:{PROFESOR:'Se ofreció una instancia de recuperación.',REGENTE:'',PAT:''}}),
+ mk('INF-0001',0,'Disciplina','2026-10-21T09:40','Interrumpió la clase en forma reiterada y no atendió las indicaciones.','ACTIVO')];
+let S={rol:'PROFESOR',v:'lista',f:'TODOS',off:false,q:0,sel:null,rows:null},tt;
+try{S.rows=JSON.parse(localStorage.getItem('sgic1'))}catch(e){}
+S.rows=S.rows||seed();
+const save=()=>{try{localStorage.setItem('sgic1',JSON.stringify(S.rows))}catch(e){}if(S.off)S.q++};
+const fd=t=>t?new Date(t).toLocaleString('es-AR',{dateStyle:'short',timeStyle:'short'}):'—';
+const old=r=>Date.now()-new Date(r.ts)>730*864e5,cur=()=>S.rows.find(r=>r.id===S.sel);
+const vis=()=>S.rows.filter(r=>(S.rol!=='FAMILIA'||r.dni===MI)&&(S.f==='TODOS'||r.estado===S.f)).sort((a,b)=>b.ts.localeCompare(a.ts));
+const toast=m=>{const t=$('#t');t.textContent=m;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>t.hidden=true,2800)};
+const badge=e=>`<span class="b ${e}">${EST[e]}</span>`,purg=r=>old(r)?' <span class="b EN_SUSPENSO">Purgable (+2 años)</span>':'';
+function head(){
+ const tabs=[['lista','Informes'],['nuevo','Nuevo informe'],['arq','Arquitectura']];
+ return `<header class="top np"><div class="bar"><h1>Informes de conducta</h1><button class="pill${S.off?' off':''}" data-a="net" title="Simula la pérdida y la vuelta de la conexión">${S.off?'Sin conexión':'En línea'}${S.q?` · ${S.q} por sincronizar`:''}</button></div>
+ <div class="bar"><label class="rol">Sesión BUE como<select data-a="rol">${Object.entries(ROLES).map(([k,v])=>`<option value="${k}"${k===S.rol?' selected':''}>${v}</option>`).join('')}</select></label></div>
+ <nav>${tabs.map(([k,t])=>`<button data-a="tab" data-v="${k}"${S.v===k||(k==='lista'&&S.v==='det')?' aria-current="page"':''}>${t}</button>`).join('')}</nav></header>`}
+function lista(){
+ const rs=vis();
+ return `<div class="chips" role="group" aria-label="Filtrar por estado">${['TODOS',...Object.keys(EST)].map(k=>`<button data-a="f" data-v="${k}" aria-pressed="${S.f===k}">${k==='TODOS'?'Todos':EST[k]}</button>`).join('')}</div>`+
+ (rs.length?rs.map(r=>`<button class="row ${r.estado}" data-a="open" data-id="${r.id}"><b>${esc(r.al)} · ${esc(r.cur)}</b><span class="mu">${r.id} · ${esc(r.cat)} · ${fd(r.ts)}</span><div>${badge(r.estado)}${r.mail.leido?'':' <span class="mu">Lectura pendiente</span>'}${purg(r)}</div></button>`).join(''):'<p class="mu">No hay informes con este filtro.</p>')}
+function nuevo(){
+ if(S.rol!=='PROFESOR')return '<div class="pan"><h3>Solo el Profesor crea informes</h3><p class="mu">Cambiá el rol a Profesor para cargar uno nuevo.</p></div>';
+ const n=new Date(Date.now()-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,16);
+ return `<div class="pan"><h3>Nuevo informe</h3><label for="al">Alumno</label><select id="al">${AL.map((a,i)=>`<option value="${i}">${a[0]} · ${a[2]}</option>`).join('')}</select><label for="ca">Categoría</label><select id="ca">${CATS.map(c=>`<option>${c}</option>`).join('')}</select><label for="ts">Fecha y hora del hecho</label><input id="ts" type="datetime-local" value="${n}"><label for="he">Descripción del hecho</label><textarea id="he" placeholder="Qué ocurrió, dónde y quiénes estaban presentes."></textarea><p><button class="btn" data-a="crear">Guardar informe</button></p><p class="mu">Se envía un correo a la familia y queda pendiente el acuse de lectura.</p></div>`}
+function acta(r){
+ const I=k=>`<h4>Intervención del ${ROLES[k]}</h4><p>${esc(r.int[k])||'Sin intervención registrada.'}</p>`;
+ return `<article id="acta" class="acta"><header><div class="esc">E</div><div><h2>${ESC}</h2><div>Ciclo lectivo ${new Date(r.ts).getFullYear()} · Turno Mañana</div></div></header>
+ <h3>Informe de conducta escolar</h3><table><tr><td>Alumno</td><td>${esc(r.al)}</td><td>DNI</td><td>${r.dni}</td></tr><tr><td>Curso y división</td><td>${esc(r.cur)}</td><td>Fecha y hora</td><td>${fd(r.ts)}</td></tr><tr><td>Preceptor</td><td>${esc(r.prec)}</td><td>PAT</td><td>${esc(r.pat)}</td></tr><tr><td>N.º de informe</td><td>${r.id}</td><td>Estado</td><td>${EST[r.estado]}</td></tr></table>
+ <h4>Tipificación: ${esc(r.cat)}</h4><p>${esc(r.hecho)}</p><h4>Descargo del alumno</h4><p>${esc(r.desc)||'Sin descargo presentado.'}</p>${I('PROFESOR')}${I('REGENTE')}${I('PAT')}
+ <h4>Acuse de recibo</h4><p>Notificación enviada: ${fd(r.mail.env)} · Lectura confirmada: ${fd(r.mail.leido)}</p>
+ <div class="firmas"><div>Padre, madre o tutor</div><div>Regencia</div><div>Dirección</div></div></article>`}
+function det(){
+ const r=cur();if(!r)return '';
+ const can=S.rol==='REGENTE'||S.rol==='PRECEPTOR';
+ const ints=['PROFESOR','REGENTE','PAT'].map(k=>`<div class="pan"><h3>Intervención del ${ROLES[k]}</h3>${S.rol===k?`<textarea data-t="${k}" aria-label="Intervención del ${ROLES[k]}">${esc(r.int[k])}</textarea><p><button class="btn" data-a="int" data-k="${k}">Guardar intervención</button></p>`:`<p>${esc(r.int[k])||'<span class="mu">Sin texto todavía.</span>'}</p><p class="mu">Solo la edita el ${ROLES[k]}.</p>`}</div>`).join('');
+ return `<p class="np"><button class="btn g" data-a="tab" data-v="lista">Volver a la lista</button></p><div class="split"><div class="np">
+ <div class="pan"><h3>${r.id} · ${esc(r.al)}</h3><p>${badge(r.estado)}${purg(r)}</p>
+ ${can?`<label for="es">Estado</label><select id="es" data-a="est">${Object.entries(EST).map(([k,v])=>`<option value="${k}"${k===r.estado?' selected':''}>${v}</option>`).join('')}</select><p class="mu">Un informe no se borra: solo cambia de estado.</p>`:''}
+ <p class="mu">Correo a la familia: ${r.mail.env?fd(r.mail.env):'en cola de sincronización'} · Lectura: ${r.mail.leido?fd(r.mail.leido):'pendiente'}</p>
+ ${S.rol==='FAMILIA'&&!r.mail.leido?'<p><button class="btn" data-a="ack">Confirmar lectura</button></p>':''}
+ <button class="btn" data-a="pdf">Descargar PDF oficial</button></div>${ints}
+ <div class="pan"><h3>Descargo del alumno</h3>${S.rol==='FAMILIA'?`<textarea data-t="desc" aria-label="Descargo">${esc(r.desc)}</textarea><p><button class="btn" data-a="desc">Enviar descargo</button></p>`:`<p>${esc(r.desc)||'<span class="mu">Sin descargo.</span>'}</p>`}</div>
+ </div><div class="acw">${acta(r)}</div></div>`}
+function render(){const v=S.v;$('#app').innerHTML=head()+`<main>${v==='lista'?lista():v==='nuevo'?nuevo():v==='det'?det():$('#arq').innerHTML}</main>`}
+function act(a,b){
+ const r=cur();
+ if(a==='tab')S.v=b.dataset.v;
+ else if(a==='open'){S.sel=b.dataset.id;S.v='det'}
+ else if(a==='f')S.f=b.dataset.v;
+ else if(a==='rol'){S.rol=b.value;if(S.v==='det'&&S.rol==='FAMILIA'&&r.dni!==MI)S.v='lista'}
+ else if(a==='net'){S.off=!S.off;if(!S.off&&S.q){const n=S.q;S.q=0;S.rows.forEach(x=>{if(!x.mail.env)x.mail.env=new Date().toISOString()});save();toast(`Sincronizado: ${n} cambio${n>1?'s':''} enviado${n>1?'s':''}`)}}
+ else if(a==='est'){r.estado=b.value;save();toast('Estado actualizado')}
+ else if(a==='int'){r.int[b.dataset.k]=$(`[data-t=${b.dataset.k}]`).value;save();toast('Intervención guardada')}
+ else if(a==='desc'){r.desc=$('[data-t=desc]').value;save();toast('Descargo enviado')}
+ else if(a==='ack'){r.mail.leido=new Date().toISOString();save();toast('Lectura confirmada')}
+ else if(a==='crear'){
+  const t=$('#he').value.trim();if(!t){toast('Describí el hecho antes de guardar');return}
+  const n=Math.max(...S.rows.map(x=>+x.id.slice(4)))+1,x=mk('INF-'+String(n).padStart(4,'0'),$('#al').value,$('#ca').value,$('#ts').value,t,'ACTIVO',{mail:{env:S.off?null:new Date().toISOString(),leido:null}});
+  S.rows.push(x);S.sel=x.id;S.v='det';save();toast(S.off?'Guardado sin conexión: se enviará al reconectar':'Informe guardado y correo enviado a la familia')}
+ else if(a==='pdf'){try{print()}catch(e){}toast('En el diálogo de impresión elegí «Guardar como PDF»')}
+ render()}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(b&&b.tagName!=='SELECT')act(b.dataset.a,b)});
+document.addEventListener('change',e=>{const b=e.target;if(b.tagName==='SELECT'&&b.dataset.a)act(b.dataset.a,b)});
+render();
+</script></body></html>

@@ -1,0 +1,23 @@
+plugins {
+  id 'java'
+  id 'org.springframework.boot' version '3.3.5'
+  id 'io.spring.dependency-management' version '1.1.6'
+}
+
+group = 'com.escuela'
+version = '0.1.0'
+java { sourceCompatibility = JavaVersion.VERSION_17 }
+repositories { mavenCentral() }
+
+dependencies {
+  implementation 'org.springframework.boot:spring-boot-starter-web'
+  implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+  implementation 'org.springframework.boot:spring-boot-starter-security'
+  implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
+  runtimeOnly 'com.h2database:h2'
+  runtimeOnly 'org.postgresql:postgresql'
+  testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+// Copia frontend/ dentro del jar: un solo proceso sirve la API y las páginas.
+tasks.named('processResources') { from('../frontend') { into 'static' } }

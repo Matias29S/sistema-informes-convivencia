@@ -1,0 +1,1 @@
+<?php require_once __DIR__ . '/../config/app.php'; require_role('DIRECTIVO','ADMIN'); redirect('informes/listado.php?estado=PENDIENTE_RESOLUCION');
