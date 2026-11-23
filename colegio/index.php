@@ -3,11 +3,7 @@
 require_once __DIR__ . '/config/app.php';
 global $pdo;
 $noticias = $pdo->query("SELECT id,titulo,resumen,fecha FROM noticias WHERE publicada=1 ORDER BY fecha DESC LIMIT 6")->fetchAll();
-$eventos  = $pdo->query("SELECT titulo,descripcion,fecha_inicio,fecha_fin,tipo FROM eventos WHERE visible=1 ORDER BY fecha_inicio ASC")->fetchAll();
 $autoridades = $pdo->query("SELECT nombre,apellido,rol_id FROM usuarios WHERE activo=1 AND rol_id IN ('DIRECTIVO','PRECEPTOR','ADMIN') ORDER BY rol_id LIMIT 8")->fetchAll();
-$cursos = $pdo->query("SELECT c.nombre, c.especialidad, GROUP_CONCAT(d.nombre ORDER BY d.nombre SEPARATOR ', ') AS divisiones
-                       FROM cursos c LEFT JOIN divisiones d ON d.curso_id=c.id
-                       GROUP BY c.id ORDER BY c.anio, c.especialidad")->fetchAll();
 $escuela = cfg('escuela_nombre', 'E.E.T. N° 35 D.E. 18 "Ing. Eduardo Latzina"');
 $direccion = cfg('escuela_direccion', 'Av. Lope de Vega 2150, CABA');
 $telefono = cfg('escuela_telefono', '4567-5838 / 1441');
@@ -19,15 +15,15 @@ $fmt = fn($f) => date('d/m/Y', strtotime($f));
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Escuela Técnica N° 35 D.E. 18 Ing. Eduardo Latzina. Informes de convivencia, oferta educativa, noticias y calendar escolar.">
+<meta name="description" content="Escuela Técnica N° 35 D.E. 18 Ing. Eduardo Latzina. Informes de convivencia, institución, noticias y contacto.">
 <meta name="theme-color" content="#123a63">
 <title><?= e($escuela) ?> · Sistema de Informes</title>
 <link rel="stylesheet" href="<?= e(url('assets/css/styles.css')) ?>">
 </head>
 <body class="pub">
 <nav class="pubnav">
- <a href="#inicio">Inicio</a><a href="#institucion">Institución</a><a href="#oferta">Oferta educativa</a>
- <a href="#noticias">Noticias y novedades</a><a href="#calendario">Calendario escolar</a><a href="#contacto">Contacto</a>
+ <a href="#inicio">Inicio</a><a href="#institucion">Institución</a>
+ <a href="#noticias">Noticias y novedades</a><a href="#contacto">Contacto</a>
  <a href="<?= e(url('login.php')) ?>" style="background:var(--azul);color:#fff">Acceso al sistema</a>
 </nav>
 
@@ -48,7 +44,7 @@ $fmt = fn($f) => date('d/m/Y', strtotime($f));
   <div class="cards">
    <div class="card"><h3>Nuestra misión</h3><p>Brindar una formación técnica integral que prepare a nuestros estudiantes para el mundo laboral y la ciudadanía responsable.</p></div>
    <div class="card"><h3>Convivencia</h3><p>Promovemos una cultura institucional basada en el respeto, el diálogo y la resolución pacífica de los conflictos.</p></div>
-   <div class="card"><h3>Accesos rápidos</h3><p><a href="#institucion">Institución</a> · <a href="#oferta">Oferta educativa</a><br><a href="#calendario">Calendario</a> · <a href="#contacto">Contacto</a></p></div>
+   <div class="card"><h3>Accesos rápidos</h3><p><a href="#institucion">Institución</a> · <a href="#noticias">Noticias</a><br><a href="#contacto">Contacto</a></p></div>
   </div>
  </section>
 
@@ -82,20 +78,6 @@ $fmt = fn($f) => date('d/m/Y', strtotime($f));
   </div>
  </section>
 
- <section id="oferta">
-  <span class="section-tag">Niveles y especialidades</span>
-  <h2>Oferta educativa</h2>
-  <div class="card">
-   <p>Nivel secundario técnico con orientaciones en <b>Computación</b> y <b>Automotores</b>. Las divisiones se organizan por año y especialidad.</p>
-   <div class="table-wrap"><table><thead><tr><th>Curso</th><th>Especialidad</th><th>Divisiones</th></tr></thead><tbody>
-   <?php foreach ($cursos as $c): ?>
-    <tr><td><b><?= e($c['nombre']) ?></b></td><td><?= e($c['especialidad'] ?: 'Común') ?></td><td><?= e($c['divisiones'] ?: '—') ?></td></tr>
-   <?php endforeach; ?>
-   </tbody></table></div>
-   <p class="muted">Modalidad: presencial. Los espacios de formación técnica se desarrollan en aulas-taller y laboratorios.</p>
-  </div>
- </section>
-
  <section id="noticias">
   <span class="section-tag">Actualidad</span>
   <h2>Noticias y novedades</h2>
@@ -109,19 +91,6 @@ $fmt = fn($f) => date('d/m/Y', strtotime($f));
     </article>
    <?php endforeach; ?>
   </div>
- </section>
-
- <section id="calendario">
-  <span class="section-tag">Fechas importantes</span>
-  <h2>Calendario escolar</h2>
-  <div class="card"><div class="table-wrap"><table>
-   <thead><tr><th>Fecha</th><th>Actividad</th><th>Tipo</th></tr></thead><tbody>
-   <?php foreach ($eventos as $ev): ?>
-    <tr><td><?= e($fmt($ev['fecha_inicio'])) ?><?= $ev['fecha_fin'] ? ' al ' . e($fmt($ev['fecha_fin'])) : '' ?></td>
-        <td><b><?= e($ev['titulo']) ?></b><?php if ($ev['descripcion']): ?><br><small><?= e($ev['descripcion']) ?></small><?php endif; ?></td>
-        <td><span class="pill info"><?= e($ev['tipo']) ?></span></td></tr>
-   <?php endforeach; ?>
-   </tbody></table></div></div>
  </section>
 
  <section id="contacto">
