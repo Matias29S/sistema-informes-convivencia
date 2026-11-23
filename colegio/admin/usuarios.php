@@ -4,10 +4,10 @@ require_once __DIR__ . '/../config/app.php';
 require_permission('usuarios.crear');
 global $pdo;
 
-/** Genera una contraseña temporal nueva, la guarda hasheada y envía el correo con los datos. */
-function reenviar_credenciales_usuario(int $usuarioId): bool {
+/** Genera una contraseña temporal nueva, la guarda hasheada y devuelve los datos para mostrar. */
+function reenviar_credenciales_usuario(int $usuarioId) {
     global $pdo;
-    $st = $pdo->prepare('SELECT email, username, nombre, rol_id FROM usuarios WHERE id=?');
+    $st = $pdo->prepare('SELECT email, username, nombre, apellido, rol_id FROM usuarios WHERE id=?');
     $st->execute([$usuarioId]);
     $u = $st->fetch();
     if (!$u) return false;
@@ -15,7 +15,14 @@ function reenviar_credenciales_usuario(int $usuarioId): bool {
     $pdo->prepare('UPDATE usuarios SET password_hash=?, verificado=1 WHERE id=?')
         ->execute([hash_password($clave), $usuarioId]);
     audit('REENVIAR_CREDENCIALES', 'usuarios', (string)$usuarioId, 'Nueva contraseña temporal generada');
-    return enviar_datos_acceso($u['email'], $u['username'], $clave, $u['nombre'], $u['rol_id']);
+    $enviado = enviar_datos_acceso($u['email'], $u['username'], $clave, $u['nombre'], $u['rol_id']);
+    return [
+        'nombre' => trim($u['nombre'] . ' ' . $u['apellido']),
+        'email' => $u['email'],
+        'usuario' => $u['username'],
+        'clave' => $clave,
+        'enviado' => $enviado,
+    ];
 }
 
 /** Valida una fecha en formato YYYY-MM-DD. */
@@ -180,16 +187,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             redirect('admin/usuarios.php?form=nuevo');
         }
 
-        $enviado = enviar_datos_acceso($email, $username, $claveTemp, $nombre, $rol);
-        $enviadoTutor = true;
+        // Se mantienen los correos como respaldo, pero las credenciales se muestran en pantalla.
+        enviar_datos_acceso($email, $username, $claveTemp, $nombre, $rol);
+        $credenciales = [[
+            'titulo' => ucwords(strtolower($rol)),
+            'nombre' => trim($nombre . ' ' . $apellido),
+            'email' => $email,
+            'usuario' => $username,
+            'clave' => $claveTemp,
+        ]];
         if ($tutorUsernameNew !== '') {
-            $enviadoTutor = enviar_datos_acceso($tutorEmail, $tutorUsernameNew, $tutorClaveTemp, $tutorNombre, 'TUTOR');
+            enviar_datos_acceso($tutorEmail, $tutorUsernameNew, $tutorClaveTemp, $tutorNombre, 'TUTOR');
+            $credenciales[] = [
+                'titulo' => 'Tutor',
+                'nombre' => trim($tutorNombre . ' ' . $tutorApellido),
+                'email' => $tutorEmail,
+                'usuario' => $tutorUsernameNew,
+                'clave' => $tutorClaveTemp,
+            ];
         }
         audit('CREAR_CUENTA', 'usuarios', (string)$usuarioId, "Alta de cuenta {$username} ({$rol})");
         clear_old();
-        flash($enviado && $enviadoTutor ? 'ok' : 'info',
-            $enviado && $enviadoTutor ? 'Cuenta creada y credenciales enviadas por correo.'
-                                      : 'Cuenta creada, pero no se pudo enviar algún correo. Usá «Reenviar credenciales».');
+        $_SESSION['credenciales_usuario'] = $credenciales;
+        flash('ok', 'Cuenta creada. Copiá las credenciales del recuadro y enviáselas por WhatsApp.');
         redirect('admin/usuarios.php');
     }
 
@@ -285,10 +305,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($accion === 'reenviar') {
         $id = (int)($_POST['id'] ?? 0);
-        $enviado = reenviar_credenciales_usuario($id);
-        flash($enviado ? 'ok' : 'err',
-            $enviado ? 'Nueva contraseña temporal generada y enviada por correo.'
-                     : 'No se pudo enviar el correo o la cuenta no existe. Revisá la configuración de correo.');
+        $datos = reenviar_credenciales_usuario($id);
+        if (!$datos) {
+            flash('err', 'No se encontró la cuenta.');
+        } else {
+            $_SESSION['credenciales_usuario'] = [[
+                'titulo' => 'Nueva credencial',
+                'nombre' => $datos['nombre'],
+                'email' => $datos['email'],
+                'usuario' => $datos['usuario'],
+                'clave' => $datos['clave'],
+            ]];
+            flash('ok', 'Nueva contraseña temporal generada. Copiala del recuadro y enviásela por WhatsApp.');
+        }
         redirect('admin/usuarios.php');
     }
 }
@@ -337,17 +366,34 @@ if ($editarId) {
     }
 }
 $rolForm = old('rol', $editar['rol_id'] ?? 'ALUMNO');
+$credencialesMostrar = $_SESSION['credenciales_usuario'] ?? [];
+unset($_SESSION['credenciales_usuario']);
 
 layout_header('Administración de cuentas');
 ?>
 <h1>Cuentas de usuario</h1>
-<p class="muted">Alta de cuentas para cualquier rol, edición y reenvío de credenciales por correo.</p>
+<p class="muted">Alta de cuentas para cualquier rol. Las credenciales se muestran en pantalla para que las entregues al alumno o tutor.</p>
+
+<?php if ($credencialesMostrar): ?>
+<div class="card" style="border:2px solid var(--azul)">
+ <h2>Credenciales generadas</h2>
+ <p class="muted">Copiá estos datos y enviáselos por WhatsApp u otro medio. No se volverán a mostrar.</p>
+ <?php foreach ($credencialesMostrar as $c): ?>
+  <div style="margin-bottom:14px">
+   <h3><?= e($c['titulo']) ?> · <?= e($c['nombre']) ?></h3>
+   <p style="margin:4px 0">Correo: <?= e($c['email']) ?></p>
+   <p style="margin:4px 0">Usuario: <code style="font-size:1.05em"><?= e($c['usuario']) ?></code></p>
+   <p style="margin:4px 0">Contraseña temporal: <code style="font-size:1.05em"><?= e($c['clave']) ?></code></p>
+  </div>
+ <?php endforeach; ?>
+</div>
+<?php endif; ?>
 
 <?php if (($_GET['form'] ?? '') === 'nuevo'): ?>
 <div class="card">
  <h2>Nueva cuenta</h2>
  <?php if ($erroresForm): ?><div class="alert err"><?= e(implode(' ', $erroresForm)) ?></div><?php endif; ?>
- <p class="muted">Se generan usuario y contraseña temporal aleatorios y se envían por correo. Cada persona puede cambiar la contraseña desde Mi perfil.</p>
+ <p class="muted">Se generan usuario y contraseña temporal aleatorios y se muestran en pantalla. Cada persona puede cambiar la contraseña desde Mi perfil.</p>
  <form method="post"><?= csrf_field() ?><input type="hidden" name="accion" value="crear">
   <div class="grid g3">
    <div><label for="rol">Rol</label>
@@ -382,7 +428,7 @@ layout_header('Administración de cuentas');
     <div><label for="relacion">Relación</label><input id="relacion" name="relacion" class="input" placeholder="Madre, Padre, Tutor…" value="<?= e(old('relacion')) ?>"></div>
    </div>
   </fieldset>
-  <p><button class="btn">Crear cuenta y enviar credenciales</button>
+  <p><button class="btn">Crear cuenta y mostrar credenciales</button>
    <a class="btn g" href="<?= e(url('admin/usuarios.php')) ?>">Cancelar</a></p>
  </form>
 </div>
@@ -440,7 +486,7 @@ layout_header('Administración de cuentas');
     <td><?= e($c['email']) ?></td>
     <td><?= e($c['rol_nombre']) ?></td>
     <td><span class="pill <?= $c['activo'] ? 'ok' : 'err' ?>"><?= $c['activo'] ? 'Activa' : 'Desactivada' ?></span>
-        <br><small><?= $c['verificado'] ? 'Credenciales enviadas' : 'Pendiente' ?></small></td>
+        <br><small><?= $c['verificado'] ? 'Credenciales generadas' : 'Pendiente' ?></small></td>
     <td><?= e($c['ultimo_acceso'] ?: '—') ?></td>
     <td>
      <div class="btn-row">

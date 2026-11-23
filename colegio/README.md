@@ -144,14 +144,16 @@ colegio/
 
 ## 5. Altas, credenciales y correo
 
-Cuando el administrador crea una cuenta en `admin/usuarios.php`:
+Cuando el administrador o el directivo crea una cuenta en `admin/usuarios.php`:
 
 1. Se genera un **usuario legible y único** con sufijo aleatorio, por ejemplo `juangar.a3f19c02`. Se comprueba en la base que no exista antes de usarlo.
 2. Se genera una **contraseña temporal aleatoria distinta para cada cuenta** (12 caracteres con mayúsculas, minúsculas, números y símbolos) y se guarda hasheada con PBKDF2.
 3. La cuenta se crea ya **verificada** (`verificado = 1`), así que la persona puede ingresar enseguida.
-4. Se envía por correo el **usuario y la contraseña temporal**. Si el rol es ALUMNO y se crea un tutor nuevo, ese tutor también recibe sus propias credenciales.
+4. El sistema **muestra en pantalla** el usuario y la contraseña temporal en un recuadro, para copiarlos y entregarlos por WhatsApp u otro medio. Si el rol es ALUMNO y se crea un tutor nuevo, también se muestran las credenciales del tutor.
 5. Desde **Mi perfil** (`perfil.php`) cada persona cambia la contraseña cuando quiere, ingresando la contraseña actual y la nueva dos veces.
-6. En la lista de cuentas, el botón **Reenviar credenciales** genera una contraseña temporal nueva (invalida la anterior) y la envía otra vez por correo.
+6. En la lista de cuentas, el botón **Reenviar credenciales** genera una contraseña temporal nueva (invalida la anterior) y la **muestra en pantalla**.
+
+El correo se mantiene sólo como respaldo: según `mail_mode`, el mensaje se escribe en `storage/mail.log` o se intenta enviar por SMTP/FormSubmit. Las credenciales nunca dependen de que el correo llegue.
 
 La recuperación de contraseña olvidada (`recuperar.php`) sigue funcionando con tokens por correo.
 
@@ -163,7 +165,7 @@ La recuperación de contraseña olvidada (`recuperar.php`) sigue funcionando con
 C:\xampp\htdocs\colegio\storage\mail.log
 ```
 
-Para probar: creá un alumno, abrí el archivo y copiá el usuario y la contraseña temporal que figuran en el correo. La carpeta `storage/` se crea automáticamente si no existe.
+En producción el archivo equivalente es `htdocs/storage/mail.log`. De todos modos, al crear o reenviar credenciales los datos aparecen en pantalla, así que no hace falta abrir el archivo. La carpeta `storage/` se crea automáticamente si no existe.
 
 ### Modo producción (SMTP real)
 
@@ -181,7 +183,7 @@ En **Admin → Configuración** (`admin/configuracion.php`):
 
 Gmail requiere activar la verificación en dos pasos y generar una **contraseña de aplicación** en <https://myaccount.google.com/apppasswords>. El cliente SMTP usa `STARTTLS` + `AUTH LOGIN` y requiere la extensión `openssl` habilitada.
 
-> **Importante para hosting gratuito:** InfinityFree bloquea `mail()` y puede bloquear SMTP saliente (puertos 25/465/587) en el plan gratis. Una alternativa sin contraseñas es `mail_mode = formsubmit`: el sistema envía el correo por HTTP a FormSubmit.co. Cada destinatario debe confirmar **una sola vez** el enlace “Activate Form” que recibe; a partir de ahí recibe los correos normalmente. Si todavía no confirmó, el envío devuelve `false` y conviene dejar `mail_mode = log` para no perder las credenciales.
+> **Importante para hosting gratuito:** InfinityFree bloquea `mail()` y puede bloquear SMTP saliente (puertos 25/465/587) en el plan gratis. `mail_mode = formsubmit` evita SMTP pero exige que cada destinatario confirme una vez el enlace “Activate Form”, por lo que no se recomienda para las credenciales. En este sistema las credenciales se entregan en pantalla; el correo es sólo un respaldo y conviene dejar `mail_mode = log` si no hay SMTP propio.
 
 ---
 
@@ -288,9 +290,9 @@ Este proyecto es **PHP + MySQL** y necesita un servidor con esos componentes. **
 | **"Error de base de datos"** al abrir cualquier página | MySQL no está iniciado (XAMPP Control Panel → Start en MySQL), la base `colegio` no existe o los credenciales en `config/database.php` son incorrectos. Verificá también que el puerto 3306 no esté ocupado por otro servicio. |
 | **Página en blanco** | Error fatal de PHP oculto. Revisá `C:\xampp\php\logs\php_error_log` (o `error_log` del hosting). Para diagnosticar, activá temporalmente `display_errors = On` en `php.ini` y reiniciá Apache. También verificá que la carpeta `storage/` sea escribible. |
 | **CSS / imágenes con 404** | La carpeta debe estar en `C:\xampp\htdocs\colegio` y `BASE_URL` debe ser `/colegio/`. Comprobá que existan `assets/css/styles.css` y `assets/img/escudo.png`. Limpiá la caché del navegador (Ctrl + F5). |
-| **No llega el correo con las credenciales** | Con `mail_mode = log`, mirá `storage/mail.log`; no se envía correo real. Si configuraste `smtp`, revisá `smtp_usuario`, `smtp_password` (contraseña de aplicación), `smtp_puerto` y que el puerto 587/465 no esté bloqueado por el hosting. |
+| **No llega el correo con las credenciales** | No hace falta: al crear o reenviar, los datos se muestran en pantalla. El correo es opcional; con `mail_mode = log` se guarda en `storage/mail.log` y con `smtp` revisá usuario, clave y puerto 587/465. |
 | **"Token de seguridad inválido"** | La sesión expiró o el formulario se abrió en otra pestaña. Recargá la página y volvé a enviar. |
-| **No puedo iniciar sesión con un usuario nuevo** | Buscá el usuario y la contraseña temporal en `storage/mail.log` (o en el correo recibido). Si la contraseña fue cambiada antes, usá la nueva. Si no tenés las credenciales, desde `admin/usuarios.php` usá **Reenviar credenciales**. |
+| **No puedo iniciar sesión con un usuario nuevo** | Buscá el usuario y la contraseña en el recuadro que apareció al crear la cuenta (o en `storage/mail.log`). Si la contraseña fue cambiada antes, usá la nueva. Si no tenés las credenciales, desde `admin/usuarios.php` usá **Reenviar credenciales**: se genera una nueva y se muestra en pantalla. |
 | **Olvidé la contraseña** | Usá `recuperar.php`: se envía un token por correo para definir una nueva. |
 | **Error al subir archivos** | Verificá permisos de `storage/uploads/`, que el MIME esté entre PDF/JPEG/PNG/WebP y que el archivo no supere 5 MB. |
 
