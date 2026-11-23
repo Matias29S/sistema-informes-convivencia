@@ -10,6 +10,7 @@ class Mailer {
         $modo = cfg('mail_mode', 'log');
 
         if ($modo === 'smtp') return self::smtp($para, $asunto, $cuerpo, $desde);
+        if ($modo === 'mail') return self::php_mail($para, $asunto, $cuerpo, $desde);
 
         // Modo desarrollo: se guarda en storage/mail.log para poder comprobar los envíos.
         $dir = dirname(__DIR__) . '/storage';
@@ -17,6 +18,16 @@ class Mailer {
         $linea = '[' . date('Y-m-d H:i:s') . "] PARA: {$para} | ASUNTO: {$asunto}\n";
         $linea .= $cuerpo . "\n" . str_repeat('-', 70) . "\n";
         return (bool)file_put_contents($dir . '/mail.log', $linea, FILE_APPEND | LOCK_EX);
+    }
+
+    /** Envío con la función mail() del servidor (útil en hosting compartido que lo habilita). */
+    private static function php_mail(string $para, string $asunto, string $cuerpo, string $desde): bool {
+        $cabeceras = "From: {$desde}\r\n"
+            . "Reply-To: {$desde}\r\n"
+            . "MIME-Version: 1.0\r\n"
+            . "Content-Type: text/plain; charset=UTF-8\r\n"
+            . "Content-Transfer-Encoding: 8bit\r\n";
+        return @mail($para, self::codificar($asunto), $cuerpo, $cabeceras);
     }
 
     /** Cliente SMTP mínimo con STARTTLS y AUTH LOGIN (sin dependencias externas). */

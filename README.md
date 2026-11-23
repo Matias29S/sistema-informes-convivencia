@@ -8,6 +8,10 @@ Repositorio con **la versión definitiva PHP + MySQL** del sistema y, además, l
 | [`frontend/`](frontend/) | Demo estática (HTML/CSS/JS) publicada en Netlify. Es sólo visual: guarda datos en `localStorage`, **no reemplaza al sistema real**. | Demo / maqueta |
 | `backend/`, `db/`, `docs/` | Prototipos descartados (Spring Boot / PostgreSQL y documento original). Se conservan como referencia, pero **no se usan**. | Legacy |
 
+## Sistema online (real)
+
+<https://informeset35.kesug.com>
+
 ## Demo online (solo visual)
 
 <https://funny-belekoy-45b467.netlify.app>

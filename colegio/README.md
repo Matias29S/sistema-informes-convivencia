@@ -171,7 +171,7 @@ En **Admin → Configuración** (`admin/configuracion.php`):
 
 | Clave | Valor de ejemplo |
 |---|---|
-| `mail_mode` | `smtp` |
+| `mail_mode` | `smtp`, `mail` (usa `mail()` del hosting) o `log` |
 | `smtp_host` | `smtp.gmail.com` |
 | `smtp_puerto` | `587` |
 | `smtp_usuario` | `tu-cuenta@gmail.com` |
