@@ -5,6 +5,15 @@ function e($s): string {
     return htmlspecialchars((string)($s ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
 
+/** Formatea un DATETIME de MySQL en fecha legible, usando la hora de Argentina. */
+function fmt_fecha($valor, bool $conHora = true): string {
+    $s = trim((string)($valor ?? ''));
+    if ($s === '' || $s === '0000-00-00 00:00:00') return '—';
+    $ts = strtotime($s);
+    if ($ts === false) return e($s);
+    return date($conHora ? 'd/m/Y H:i' : 'd/m/Y', $ts);
+}
+
 function url(string $path = ''): string {
     return BASE_URL . ltrim($path, '/');
 }
@@ -201,6 +210,7 @@ const ESTADOS_INFORME = [
     'PENDIENTE_CONSEJO_CONVIVENCIA' => 'Pendiente de intervención del Consejo de Convivencia',
     'PENDIENTE_RESOLUCION' => 'Pendiente de resolución',
     'RESUELTO'           => 'Resuelto',
+    'REVISADO'           => 'Revisado por el alumno/a',
     'ANULADO'            => 'Anulado',
 ];
 

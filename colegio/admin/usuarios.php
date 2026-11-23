@@ -487,7 +487,7 @@ layout_header('Administración de cuentas');
     <td><?= e($c['rol_nombre']) ?></td>
     <td><span class="pill <?= $c['activo'] ? 'ok' : 'err' ?>"><?= $c['activo'] ? 'Activa' : 'Desactivada' ?></span>
         <br><small><?= $c['verificado'] ? 'Credenciales generadas' : 'Pendiente' ?></small></td>
-    <td><?= e($c['ultimo_acceso'] ?: '—') ?></td>
+    <td><?= e($c['ultimo_acceso'] ? fmt_fecha($c['ultimo_acceso']) : '—') ?></td>
     <td>
      <div class="btn-row">
       <a class="btn s" href="<?= e(url('admin/usuarios.php?editar=' . $c['id'])) ?>">Editar</a>

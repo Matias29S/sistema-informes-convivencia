@@ -2,9 +2,11 @@
 /**
  * Generador de PDF liviano (sin Composer). A4, tipografías Helvetica,
  * codificación WinAnsi para caracteres españoles. Diseño administrativo.
+ * Permite incrustar imágenes PNG (8 bits, sin interlazado) como XObject.
  */
 class PDF {
     private array $pages = [];
+    private array $images = [];
     private array $fonts = ['N' => 3, 'B' => 4];
     private string $font = 'N';
     private float $size = 11;
@@ -70,6 +72,89 @@ class PDF {
         $this->cmd("{$x} {$this->y($y + $h)} {$w} {$h} re S");
     }
 
+    /** Dibuja un PNG en la posición indicada (medidas desde la esquina superior izquierda). */
+    public function image(string $ruta, float $x, float $y, float $w, float $h): bool {
+        $bin = @file_get_contents($ruta);
+        if ($bin === false || substr($bin, 0, 8) !== "\x89PNG\r\n\x1a\n") return false;
+
+        $ancho = 0; $alto = 0; $bits = 0; $color = 0; $interlace = 0;
+        $idat = ''; $plte = ''; $trns = '';
+        $pos = 8;
+        while ($pos + 12 <= strlen($bin)) {
+            $len = unpack('N', substr($bin, $pos, 4))[1];
+            $tipo = substr($bin, $pos + 4, 4);
+            $datos = substr($bin, $pos + 8, $len);
+            if ($tipo === 'IHDR' && $len >= 13) {
+                $h2 = unpack('Nw/Nh/Cb/Cc/Ccomp/Cfilt/Cinter', $datos);
+                $ancho = (int)$h2['w']; $alto = (int)$h2['h'];
+                $bits = (int)$h2['b']; $color = (int)$h2['c']; $interlace = (int)$h2['inter'];
+            } elseif ($tipo === 'IDAT') $idat .= $datos;
+            elseif ($tipo === 'PLTE') $plte = $datos;
+            elseif ($tipo === 'tRNS') $trns = $datos;
+            elseif ($tipo === 'IEND') break;
+            $pos += 12 + $len;
+        }
+        if ($ancho < 1 || $alto < 1 || $bits !== 8 || $interlace !== 0) return false;
+        if (!in_array($color, [0, 2, 3, 4, 6], true)) return false;
+
+        $canales = [0 => 1, 2 => 3, 3 => 1, 4 => 2, 6 => 4][$color];
+        $filtro = @gzuncompress($idat);
+        if ($filtro === false) return false;
+        $fila = $ancho * $canales;
+        if (strlen($filtro) < ($fila + 1) * $alto) return false;
+
+        $crudo = '';
+        $anterior = str_repeat("\0", $fila);
+        $p = 0;
+        for ($row = 0; $row < $alto; $row++) {
+            $f = ord($filtro[$p++]);
+            $linea = substr($filtro, $p, $fila);
+            $p += $fila;
+            for ($i = 0; $i < $fila; $i++) {
+                $a = $i >= $canales ? ord($linea[$i - $canales]) : 0;
+                $b = ord($anterior[$i]);
+                $c = $i >= $canales ? ord($anterior[$i - $canales]) : 0;
+                $x = ord($linea[$i]);
+                if ($f === 1) $x += $a;
+                elseif ($f === 2) $x += $b;
+                elseif ($f === 3) $x += intdiv($a + $b, 2);
+                elseif ($f === 4) {
+                    $pp = $a + $b - $c;
+                    $pa = abs($pp - $a); $pb = abs($pp - $b); $pc = abs($pp - $c);
+                    $x += ($pa <= $pb && $pa <= $pc) ? $a : ($pb <= $pc ? $b : $c);
+                }
+                $linea[$i] = chr($x & 0xFF);
+            }
+            $crudo .= $linea;
+            $anterior = $linea;
+        }
+
+        $rgb = ''; $alpha = '';
+        for ($i = 0; $i < strlen($crudo); $i += $canales) {
+            if ($color === 3) {
+                $idx = ord($crudo[$i]);
+                $rgb .= substr($plte, $idx * 3, 3);
+                $alpha .= chr(isset($trns[$idx]) ? ord($trns[$idx]) : 255);
+            } elseif ($color === 0 || $color === 4) {
+                $g = chr(ord($crudo[$i]));
+                $rgb .= $g . $g . $g;
+                $alpha .= chr($color === 4 ? ord($crudo[$i + 1]) : 255);
+            } else {
+                $rgb .= substr($crudo, $i, 3);
+                $alpha .= chr($color === 6 ? ord($crudo[$i + 3]) : 255);
+            }
+        }
+
+        $this->images[] = [
+            'w' => $ancho, 'h' => $alto,
+            'rgb' => gzcompress($rgb, 9),
+            'alpha' => gzcompress($alpha, 9),
+        ];
+        $num = count($this->images);
+        $this->cmd(sprintf('q %.2F 0 0 %.2F %.2F %.2F cm /Im%d Do Q', $w, $h, $x, $this->y($y + $h), $num));
+        return true;
+    }
+
     /** Devuelve la altura usada. */
     public function paragraph(float $x, float $y, float $ancho, string $texto, float $interlinea = 0): float {
         $lineas = $this->wrap($texto, $ancho);
@@ -97,18 +182,41 @@ class PDF {
         $kids = [];
         $n = count($this->pages);
         for ($i = 1; $i <= $n; $i++) $kids[] = (4 + $i) . " 0 R";
-        // 2 = Pages, 3 = Helvetica, 4 = Helvetica-Bold, 5..(4+n) = contenidos, (5+n).. = páginas
+        // 2 = Pages, 3 = Helvetica, 4 = Helvetica-Bold, 5..(4+n) = páginas,
+        // (5+n).. = contenidos, (5+2n).. = imágenes y máscaras de transparencia.
         $objs[2] = "<< /Type /Pages /Kids [" . implode(' ', $kids) . "] /Count {$n} >>";
         $objs[3] = "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>";
         $objs[4] = "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>";
 
         $pageObj = 5;
         $contentObj = 5 + $n;
+        $imageObj = 5 + 2 * $n;
+        $maskObj = $imageObj + count($this->images);
+
+        $xobjects = [];
+        foreach ($this->images as $i => $img) {
+            $num = $imageObj + $i;
+            $stream = $img['rgb'];
+            $dict = "<< /Type /XObject /Subtype /Image /Width {$img['w']} /Height {$img['h']}"
+                . " /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /FlateDecode /Length " . strlen($stream);
+            if (isset($img['alpha'])) {
+                $dict .= " /SMask " . ($maskObj + $i) . " 0 R";
+                $mask = $img['alpha'];
+                $objs[$maskObj + $i] = "<< /Type /XObject /Subtype /Image /Width {$img['w']} /Height {$img['h']}"
+                    . " /ColorSpace /DeviceGray /BitsPerComponent 8 /Filter /FlateDecode /Length " . strlen($mask)
+                    . " >>\nstream\n{$mask}\nendstream";
+            }
+            $objs[$num] = $dict . " >>\nstream\n{$stream}\nendstream";
+            $xobjects[] = '/Im' . ($i + 1) . ' ' . $num . ' 0 R';
+        }
+
         for ($i = 0; $i < $n; $i++) {
             $stream = $this->pages[$i];
             $objs[$contentObj + $i] = "<< /Length " . strlen($stream) . " >>\nstream\n{$stream}endstream";
+            $recursos = '/Font << /F1 3 0 R /F2 4 0 R >>';
+            if ($xobjects) $recursos .= ' /XObject << ' . implode(' ', $xobjects) . ' >>';
             $objs[$pageObj + $i] = "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 " . self::W . " " . self::H . "] "
-                . "/Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents " . ($contentObj + $i) . " 0 R >>";
+                . "/Resources << {$recursos} >> /Contents " . ($contentObj + $i) . " 0 R >>";
         }
 
         $pdf = "%PDF-1.4\n%\xE2\xE3\xCF\xD3\n";

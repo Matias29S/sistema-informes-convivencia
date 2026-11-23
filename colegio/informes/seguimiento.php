@@ -102,7 +102,7 @@ layout_header('Seguimiento de informes');
         <td><?= e(trim($r['alumno_apellido'] . ', ' . $r['alumno_nombre'])) ?></td>
         <td><?= e(trim($r['curso'] . ' ' . ($r['especialidad'] ? $r['especialidad'] . ' ' : '') . $r['division'])) ?></td>
         <td><?= e(trim($r['docente_apellido'] . ', ' . $r['docente_nombre'])) ?></td>
-        <td><?= e($r['fecha_incidente']) ?></td>
+        <td><?= e(fmt_fecha($r['fecha_incidente'])) ?></td>
         <td><span class="pill <?= e(clase_estado_seguimiento($r['estado'])) ?>"><?= e(estado_nombre($r['estado'])) ?></span></td>
         <td>
           <small>

@@ -89,7 +89,7 @@ layout_header('Mis informes');
         <td><?= e(trim($r['alumno_apellido'] . ', ' . $r['alumno_nombre'])) ?></td>
         <td><?= e(trim($r['curso'] . ' ' . ($r['especialidad'] ? $r['especialidad'] . ' ' : '') . $r['division'])) ?></td>
         <td><?= e(trim($r['docente_apellido'] . ', ' . $r['docente_nombre'])) ?></td>
-        <td><?= e($r['fecha_incidente']) ?></td>
+        <td><?= e(fmt_fecha($r['fecha_incidente'])) ?></td>
         <td><span class="pill <?= e(clase_estado_alumno($r['estado'])) ?>"><?= e(estado_nombre($r['estado'])) ?></span></td>
         <td>
           <a class="btn s" href="<?= e(url($urlDetalle)) ?>">Ver</a>

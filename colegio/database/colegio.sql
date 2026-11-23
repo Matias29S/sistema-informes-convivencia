@@ -142,6 +142,8 @@ CREATE TABLE informes (
   solicitud_sancion TEXT NULL,
   cargo VARCHAR(100) NOT NULL,
   fecha_creacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  revisado TINYINT(1) NOT NULL DEFAULT 0,
+  fecha_revision DATETIME NULL,
   firma_digital VARCHAR(180) NOT NULL,
   estado VARCHAR(35) NOT NULL DEFAULT 'PENDIENTE_REVISION',
   creado_por INT NOT NULL,

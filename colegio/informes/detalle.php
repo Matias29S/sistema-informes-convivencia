@@ -73,6 +73,22 @@ if (!$puedeVer) denegar_acceso('No tenés autorización para ver este informe.')
 $detalleUrl = 'informes/detalle.php?id=' . rawurlencode($inf['codigo']);
 $informeId = (int)$inf['id'];
 
+// Cuando el alumno abre su informe, queda registrado como revisado (sin cambiar el estado del trámite).
+if ($rol === 'ALUMNO' && $miAlumnoId > 0 && (int)$inf['alumno_id'] === $miAlumnoId && empty($inf['revisado'])) {
+    try {
+        $st = $pdo->prepare('UPDATE informes SET revisado=1, fecha_revision=NOW() WHERE id=? AND (revisado IS NULL OR revisado=0)');
+        $st->execute([$informeId]);
+        if ($st->rowCount() > 0) {
+            $st = $pdo->prepare('INSERT INTO historial_estados (informe_id, estado, usuario_id, observacion) VALUES (?,?,?,?)');
+            $st->execute([$informeId, 'REVISADO', $uid, 'Informe revisado por el alumno/a']);
+            $inf['revisado'] = 1;
+            $inf['fecha_revision'] = date('Y-m-d H:i:s');
+        }
+    } catch (PDOException $e) {
+        // Si la migración todavía no se aplicó, el informe sigue siendo visible igual.
+    }
+}
+
 // ---------- Anulación (POST con CSRF y permiso estricto) ----------
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_check();
@@ -160,150 +176,130 @@ layout_header('Informe ' . $inf['codigo']);
 <h1>Informe <?= e($inf['codigo']) ?></h1>
 <p class="muted">
   Estado: <span class="pill <?= e(clase_pill($inf['estado'])) ?>"><?= e(estado_nombre($inf['estado'])) ?></span>
-  · Creado el <?= e($inf['fecha_creacion']) ?>
+  · Creado el <?= e(fmt_fecha($inf['fecha_creacion'])) ?>
 </p>
 
 <div class="grid g2">
 <div>
   <div class="acta">
+    <div class="acta-logo"><img src="<?= e(url('assets/img/escudo.png')) ?>" alt="Escudo de la escuela"></div>
     <div class="acta-gcba">
-      <img src="<?= e(url('assets/img/escudo.png')) ?>" alt="Escudo de la Ciudad de Buenos Aires">
       <div class="txt">
-        <div class="sup">Gobierno de la Ciudad Autónoma de Buenos Aires</div>
-        <div class="sub">Ministerio de Educación</div>
-        <div class="esc">E.E.T. N° 35 D.E. 18 "Ing. Eduardo Latzina"</div>
+        <div class="sup">GOBIERNO DE LA CIUDAD AUTÓNOMA DE BUENOS AIRES</div>
+        <div class="sub">MINISTERIO DE EDUCACIÓN</div>
+        <div class="esc">E.E.T. N° 35 D.E. 18 “Ing. Eduardo Latzina”</div>
       </div>
-      <div class="nro">INFORME<br><strong><?= e($inf['codigo']) ?></strong></div>
     </div>
-    <div class="acta-titulo">INFORME DE CONVIVENCIA</div>
+    <div class="acta-titulo">INFORME DE CONVIVENCIA · <?= e($inf['codigo']) ?></div>
 
-    <div class="acta-sec"><div class="num">1</div><div>
-      <strong>Alumno/a:</strong>
-      <span class="acta-linea"><?= e(trim($inf['alumno_apellido'] . ', ' . $inf['alumno_nombre'])) ?></span>
-      <span class="acta-campos">
-        <span>Año / curso: <span class="acta-linea"><?= e($inf['curso']) ?></span></span>
-        <span>División: <span class="acta-linea acta-corto"><?= e($inf['division']) ?></span></span>
-        <span>Legajo: <span class="acta-linea"><?= e($inf['legajo']) ?></span></span>
-        <span>DNI: <span class="acta-linea"><?= e($inf['alumno_dni']) ?></span></span>
-      </span>
+    <div class="acta-sec"><div class="num">1.-</div><div>
+      El alumno/a: <span class="acta-linea"><?= e(trim($inf['alumno_nombre'] . ' ' . $inf['alumno_apellido'])) ?></span>
+      de <span class="acta-linea acta-corto"><?= e($inf['curso']) ?></span> año,
+      División <span class="acta-linea acta-corto"><?= e($inf['division']) ?></span>.
+      <div class="acta-campos"><span>Legajo: <?= e($inf['legajo']) ?></span><span>DNI: <?= e($inf['alumno_dni']) ?></span></div>
     </div></div>
 
-    <div class="acta-sec"><div class="num">2</div><div>
-      <strong>Acción:</strong> se registra la siguiente acción, transgrediendo Normas del Reglamento de Convivencia de la escuela.
+    <div class="acta-sec"><div class="num">2.-</div><div>
+      Ha realizado la acción que se describe a continuación:
       <div class="acta-cuadro"><?= e($inf['descripcion']) ?></div>
-      <p><strong>Normas transgredidas:</strong></p>
-      <div class="acta-cuadro"><?= celda_valor($inf['normas']) ?></div>
+      <div class="acta-campos"><span>Normas transgredidas: <?= celda_valor($inf['normas']) ?></span></div>
+      transgrediendo Normas del Reglamento de Convivencia de la escuela.
     </div></div>
 
-    <div class="acta-sec"><div class="num">3</div><div>
-      <strong>Solicitud de sanción:</strong> <span class="acta-linea"><?= celda_valor($inf['solicitud_sancion']) ?></span>
+    <div class="acta-sec"><div class="num">3.-</div><div>
+      Solicitud de sanción:
       <div class="acta-campos">
         <span>Docente: <span class="acta-linea"><?= e(trim($inf['docente_apellido'] . ', ' . $inf['docente_nombre'])) ?></span></span>
-        <span>Cargo / función: <span class="acta-linea"><?= e($inf['cargo']) ?></span></span>
-      </div>
-      <div class="acta-campos">
-        <span>Fecha: <span class="acta-linea"><?= e($inf['fecha_incidente']) ?></span></span>
+        <span>Cargo/función: <span class="acta-linea"><?= e($inf['cargo']) ?></span></span>
+        <span>Fecha: <span class="acta-linea"><?= e(fmt_fecha($inf['fecha_incidente'], false)) ?></span></span>
         <span>Firma: <span class="acta-linea"><?= e($inf['firma_digital']) ?></span></span>
       </div>
+      <div class="acta-campos"><span>Categoría solicitada: <?= celda_valor($inf['solicitud_sancion']) ?></span></div>
     </div></div>
 
-    <div class="acta-sec"><div class="num">4</div><div>
-      <strong>Descargo del/de la alumno/a:</strong>
+    <div class="acta-sec"><div class="num">4.-</div><div>
+      Descargo del Alumno/a:
       <div class="acta-cuadro"><?= $descargo ? e($descargo['descripcion']) : '<span class="mu">Sin registrar</span>' ?></div>
-      <?php if ($descargo): ?>
-        <div class="acta-campos">
-          <span>Observaciones: <?= celda_valor($descargo['observaciones']) ?></span>
-          <span>Identificación: <?= e(trim($inf['alumno_apellido'] . ', ' . $inf['alumno_nombre']) . ' · ' . $inf['legajo']) ?></span>
-          <span>Fecha de presentación: <?= e($descargo['fecha_presentacion']) ?></span>
-        </div>
-      <?php endif; ?>
+      <?php if ($descargo): ?><div class="acta-campos">
+        <span>Observaciones: <?= celda_valor($descargo['observaciones']) ?></span>
+        <span>Identificación: <?= e(trim($inf['alumno_apellido'] . ', ' . $inf['alumno_nombre']) . ' · ' . $inf['legajo']) ?></span>
+        <span>Fecha de presentación: <?= e(fmt_fecha($descargo['fecha_presentacion'])) ?></span>
+      </div><?php endif; ?>
     </div></div>
 
-    <div class="acta-sec"><div class="num">5</div><div>
-      <strong>Consejo de Aula:</strong>
+    <div class="acta-sec"><div class="num">5.-</div><div>
+      Informe de Consejo de Aula
       <div class="acta-cuadro"><?= $consejoAula ? e($consejoAula['observaciones']) : '<span class="mu">Sin registrar</span>' ?></div>
-      <?php if ($consejoAula): ?>
-        <div class="acta-campos">
-          <span>Evaluación: <?= celda_valor($consejoAula['evaluacion']) ?></span>
-          <span>Recomendaciones: <?= celda_valor($consejoAula['recomendaciones']) ?></span>
-        </div>
-        <div class="acta-campos">
-          <span>Responsable: <?= e(trim($consejoAula['resp_apellido'] . ', ' . $consejoAula['resp_nombre'])) ?></span>
-          <span>Fecha de intervención: <?= e($consejoAula['fecha_intervencion']) ?></span>
-        </div>
-      <?php endif; ?>
+      <?php if ($consejoAula): ?><div class="acta-campos">
+        <span>Evaluación: <?= celda_valor($consejoAula['evaluacion']) ?></span>
+        <span>Recomendaciones: <?= celda_valor($consejoAula['recomendaciones']) ?></span>
+        <span>Responsable: <?= e(trim($consejoAula['resp_apellido'] . ', ' . $consejoAula['resp_nombre'])) ?></span>
+        <span>Fecha de intervención: <?= e(fmt_fecha($consejoAula['fecha_intervencion'])) ?></span>
+      </div><?php endif; ?>
     </div></div>
 
-    <div class="acta-sec"><div class="num">6</div><div>
-      <strong>Consejo de Convivencia:</strong>
+    <div class="acta-sec"><div class="num">6.-</div><div>
+      Informe de Consejo de Convivencia
       <div class="acta-cuadro"><?= $consejoConv ? e($consejoConv['observaciones']) : '<span class="mu">Sin registrar</span>' ?></div>
-      <?php if ($consejoConv): ?>
-        <div class="acta-campos">
-          <span>Análisis: <?= celda_valor($consejoConv['analisis']) ?></span>
-          <span>Recomendaciones: <?= celda_valor($consejoConv['recomendaciones']) ?></span>
-          <span>Intervención: <?= celda_valor($consejoConv['intervencion']) ?></span>
-        </div>
-        <div class="acta-campos">
-          <span>Responsable: <?= e(trim($consejoConv['resp_apellido'] . ', ' . $consejoConv['resp_nombre'])) ?></span>
-          <span>Fecha de intervención: <?= e($consejoConv['fecha_intervencion']) ?></span>
-        </div>
-      <?php endif; ?>
+      <?php if ($consejoConv): ?><div class="acta-campos">
+        <span>Análisis: <?= celda_valor($consejoConv['analisis']) ?></span>
+        <span>Recomendaciones: <?= celda_valor($consejoConv['recomendaciones']) ?></span>
+        <span>Intervención: <?= celda_valor($consejoConv['intervencion']) ?></span>
+        <span>Responsable: <?= e(trim($consejoConv['resp_apellido'] . ', ' . $consejoConv['resp_nombre'])) ?></span>
+        <span>Fecha de intervención: <?= e(fmt_fecha($consejoConv['fecha_intervencion'])) ?></span>
+      </div><?php endif; ?>
     </div></div>
 
-    <div class="acta-sec"><div class="num">7</div><div>
-      <strong>Observaciones:</strong>
-      <?php if (!$observaciones): ?><span class="mu">Sin observaciones registradas.</span>
+    <div class="acta-sec"><div class="num">7.-</div><div>
+      Observaciones
+      <?php if (!$observaciones): ?><div class="acta-cuadro"><span class="mu">Sin observaciones registradas.</span></div>
       <?php else: foreach ($observaciones as $ob): ?>
         <div class="acta-cuadro"><?= e($ob['observacion']) ?></div>
-        <small><?= e(estado_nombre($ob['estado'])) ?> · <?= e($ob['fecha']) ?></small>
+        <small><?= e(estado_nombre($ob['estado'])) ?> · <?= e(fmt_fecha($ob['fecha'])) ?></small>
       <?php endforeach; endif; ?>
-      <?php if ($resolucion): ?>
-        <div class="acta-campos"><span>Observaciones de la resolución: <?= celda_valor($resolucion['observaciones']) ?></span></div>
-      <?php endif; ?>
     </div></div>
 
-    <div class="acta-sec"><div class="num">8</div><div>
-      <strong>Clasificación:</strong>
-      <div class="acta-chk"><?= caja_chk($instancia === 'LEVE') ?> 1ª LEVE</div>
-      <div class="acta-chk"><?= caja_chk($instancia === 'GRAVE') ?> 2ª GRAVE</div>
-      <div class="acta-chk"><?= caja_chk($instancia === 'MUY_GRAVE') ?> 3ª MUY GRAVE</div>
+    <div class="acta-sec"><div class="num">8.-</div><div>
+      Se considera que corresponde: (Indicar a continuación)
+      <div class="acta-chk"><?= caja_chk($instancia === 'LEVE') ?> 1ª Instancia LEVE</div>
+      <div class="acta-chk"><?= caja_chk($instancia === 'GRAVE') ?> 2ª Instancia GRAVE</div>
+      <div class="acta-chk"><?= caja_chk($instancia === 'MUY_GRAVE') ?> 3ª Instancia MUY GRAVE</div>
       <div class="acta-campos"><span>Otra consideración: <?= celda_valor($clasificacion['otra_consideracion'] ?? '') ?></span></div>
-      <?php if ($instancia === 'OTRA'): ?><p><strong>Instancia registrada:</strong> OTRA</p><?php endif; ?>
-      <div class="acta-campos">
-        <span>Firma del/de la directivo/a: <span class="acta-linea"><?= $clasificacion ? e(trim($clasificacion['resp_apellido'] . ', ' . $clasificacion['resp_nombre'])) : '' ?></span></span>
-        <span>Fecha: <span class="acta-linea"><?= e($clasificacion['fecha'] ?? '') ?></span></span>
-      </div>
       <?php if ($resolucion): ?>
-        <p><strong>Decisión:</strong> <?= celda_valor($resolucion['decision']) ?></p>
-        <p><strong>Medida institucional:</strong> <?= celda_valor($resolucion['medida']) ?></p>
-        <p><strong>Fundamentación:</strong> <?= celda_valor($resolucion['fundamentacion']) ?></p>
         <div class="acta-campos">
-          <span>Responsable: <?= e(trim($resolucion['resp_apellido'] . ', ' . $resolucion['resp_nombre'])) ?></span>
-          <span>Fecha: <?= e($resolucion['fecha']) ?></span>
+          <span>Decisión: <?= celda_valor($resolucion['decision']) ?></span>
+          <span>Medida institucional: <?= celda_valor($resolucion['medida']) ?></span>
         </div>
+        <div class="acta-cuadro"><?= celda_valor($resolucion['fundamentacion']) ?></div>
       <?php endif; ?>
+      <div class="acta-campos">
+        <span>Firma Directivo: <span class="acta-linea"><?= $clasificacion ? e(trim($clasificacion['resp_apellido'] . ', ' . $clasificacion['resp_nombre'])) : '' ?></span></span>
+        <span>Fecha: <span class="acta-linea"><?= e(fmt_fecha($clasificacion['fecha'] ?? '', false)) ?></span></span>
+      </div>
     </div></div>
 
-    <div class="acta-sec"><div class="num">9</div><div>
-      <strong>Notificación:</strong> al/la alumno/a y a su tutor/a.
-      <div class="acta-campos">
-        <span>Alumno/a: <?= e(trim($inf['alumno_apellido'] . ', ' . $inf['alumno_nombre'])) ?></span>
-        <?php if (!$tutores): ?><span class="mu">Sin tutores asociados</span>
+    <div class="acta-sec"><div class="num">9.-</div><div>
+      Notificación:
+      <div class="acta-tbl"><table>
+        <thead><tr><th>Alumno</th><th>Fecha</th></tr></thead>
+        <tbody>
+          <tr><td><?= e(trim($inf['alumno_apellido'] . ', ' . $inf['alumno_nombre'])) ?></td>
+              <td><?= e(!empty($inf['revisado']) ? fmt_fecha($inf['fecha_revision']) : 'Pendiente') ?></td></tr>
+        </tbody>
+      </table></div>
+      <div class="acta-tbl"><table>
+        <thead><tr><th>Padre/Madre/Tutor</th><th>Fecha</th></tr></thead>
+        <tbody>
+        <?php if (!$tutores): ?><tr><td colspan="2" class="mu">Sin tutores asociados</td></tr>
         <?php else: foreach ($tutores as $t): ?>
-          <span>Tutor/a: <?= e(trim($t['apellido'] . ', ' . $t['nombre']) . ' (' . $t['relacion'] . ')') ?></span>
+          <tr><td><?= e(trim($t['apellido'] . ', ' . $t['nombre']) . ' (' . $t['relacion'] . ')') ?></td>
+              <td><?= e(fmt_fecha($inf['fecha_creacion'])) ?></td></tr>
         <?php endforeach; endif; ?>
-      </div>
-      <div class="acta-campos">
-        <span>Fecha de creación: <?= e($inf['fecha_creacion']) ?></span>
-        <span>Fecha de resolución: <?= celda_valor($resolucion['fecha'] ?? '') ?></span>
-      </div>
-      <?php if (!$notificaciones): ?><span class="mu">Sin notificaciones registradas.</span>
-      <?php else: foreach ($notificaciones as $n): ?>
-        <div class="acta-campos"><span><?= e(trim($n['apellido'] . ', ' . $n['nombre'])) ?> · <?= e($n['fecha']) ?> · <?= e($n['titulo']) ?></span></div>
-      <?php endforeach; endif; ?>
+        </tbody>
+      </table></div>
+      <small>Creado el <?= e(fmt_fecha($inf['fecha_creacion'])) ?><?php if (!empty($inf['revisado'])): ?> · Revisado por el alumno/a el <?= e(fmt_fecha($inf['fecha_revision'])) ?><?php endif; ?></small>
     </div></div>
   </div>
-</div>
 
 <div>
   <div class="card">
@@ -313,8 +309,8 @@ layout_header('Informe ' . $inf['codigo']);
     <p><strong>Alumno/a:</strong> <?= e(trim($inf['alumno_apellido'] . ', ' . $inf['alumno_nombre'])) ?></p>
     <p><strong>Curso / división:</strong> <?= e($cursoTexto) ?></p>
     <p><strong>Docente:</strong> <?= e(trim($inf['docente_apellido'] . ', ' . $inf['docente_nombre'])) ?></p>
-    <p><strong>Fecha del incidente:</strong> <?= e($inf['fecha_incidente']) ?></p>
-    <p><strong>Fecha de creación:</strong> <?= e($inf['fecha_creacion']) ?></p>
+    <p><strong>Fecha del incidente:</strong> <?= e(fmt_fecha($inf['fecha_incidente'])) ?></p>
+    <p><strong>Fecha de creación:</strong> <?= e(fmt_fecha($inf['fecha_creacion'])) ?></p>
     <p><strong>Creado por:</strong> <?= e(trim($inf['creador_apellido'] . ', ' . $inf['creador_nombre'])) ?></p>
     <p><strong>Firma digital:</strong> <?= e($inf['firma_digital']) ?></p>
   </div>

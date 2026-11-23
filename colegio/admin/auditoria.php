@@ -99,7 +99,7 @@ layout_header('Auditoría');
   <?php if (!$registros): ?><tr><td colspan="7" class="muted">No hay registros con esos filtros.</td></tr><?php endif; ?>
   <?php foreach ($registros as $r): ?>
    <tr>
-    <td><?= e($r['fecha']) ?></td>
+    <td><?= e(fmt_fecha($r['fecha'])) ?></td>
     <td><?= e(trim(($r['nombre'] ?? '') . ' ' . ($r['apellido'] ?? '')) ?: ($r['username'] ?? 'Sistema')) ?></td>
     <td><span class="pill info"><?= e($r['accion']) ?></span></td>
     <td><?= e($r['tabla_afectada'] ?: '—') ?></td>

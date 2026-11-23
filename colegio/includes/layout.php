@@ -68,7 +68,7 @@ function layout_header(string $titulo = '', string $modulo = ''): void {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#123a63">
+<meta name="theme-color" content="#9c1424">
 <meta name="csrf-token" content="<?= e(csrf_token()) ?>">
 <title><?= e(($titulo ? $titulo . ' - ' : '') . APP_NAME) ?> - ET35</title>
 <link rel="stylesheet" href="<?= e(url('assets/css/styles.css')) ?>">

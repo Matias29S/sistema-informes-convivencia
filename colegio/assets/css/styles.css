@@ -1,12 +1,12 @@
 /* ============================================================
    Sistema de Informes de Convivencia · ET35
-   Paleta institucional: azul / blanco / gris
+   Paleta institucional: rojo / blanco / gris
    ============================================================ */
 :root{
-  --azul:#123a63; --azul2:#1d5a96; --azulcl:#e8f1f9;
+  --azul:#9c1424; --azul2:#c4233a; --azulcl:#fbeaed;
   --gris:#5d6b78; --griscl:#f3f5f7; --borde:#d9dfe5;
-  --rojo:#a50f1b; --verde:#1f7a4d; --ambar:#a86a00;
-  --sf:#fff; --sombra:0 1px 3px rgba(18,58,99,.09);
+  --rojo:#8b1020; --verde:#1f7a4d; --ambar:#a86a00;
+  --sf:#fff; --sombra:0 1px 3px rgba(156,20,36,.12);
   --radio:8px;
 }
 *{box-sizing:border-box}
@@ -70,11 +70,11 @@ code{background:var(--griscl);padding:.1rem .3rem;border-radius:3px}
 .alert{padding:.7rem 1rem;border-radius:5px;margin-bottom:.8rem;border:1px solid;font-size:.9rem}
 .alert.ok{background:#eaf6ef;border-color:#b9ddc9;color:var(--verde)}
 .alert.err{background:#fdecee;border-color:#f0c2c6;color:var(--rojo)}
-.alert.info{background:var(--azulcl);border-color:#bcd6ea;color:var(--azul)}
+.alert.info{background:var(--azulcl);border-color:#f0c6cf;color:var(--azul)}
 label{display:block;font-weight:600;font-size:.82rem;margin:.7rem 0 .25rem;color:var(--azul)}
 input,select,textarea{width:100%;padding:.5rem .6rem;border:1px solid var(--borde);border-radius:5px;font:inherit;font-size:.9rem;background:#fff;color:#20303d}
 textarea{min-height:90px;resize:vertical}
-input:focus,select:focus,textarea:focus{outline:2px solid #a9c9e6;border-color:var(--azul2)}
+input:focus,select:focus,textarea:focus{outline:2px solid #e7b3bf;border-color:var(--azul2)}
 input[type=checkbox]{width:auto;margin-right:.35rem}
 fieldset{border:1px solid var(--borde);border-radius:6px;padding:1rem;margin:0 0 1rem}
 legend{font-weight:700;color:var(--azul);padding:0 .4rem}
@@ -99,8 +99,18 @@ details summary{cursor:pointer;font-weight:600;color:var(--azul2)}
 .chart-labels{display:flex;gap:5px;font-size:.62rem;color:var(--gris);text-align:center}
 .chart-labels span{flex:1;overflow:hidden;text-overflow:ellipsis}
 
+/* ---------- Semáforo de situación del alumno ---------- */
+.estado-alumno{display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
+.semaforo{display:flex;gap:5px;width:150px}
+.semaforo i{height:12px;flex:1;border-radius:3px;background:#e6e9ec;border:1px solid rgba(0,0,0,.06)}
+.semaforo i.on{background:var(--nivel-color);border-color:rgba(0,0,0,.12)}
+.estado-alumno b{display:block;font-size:1.05rem;color:var(--nivel-color)}
+.estado-alumno small{display:block}
+
 /* ---------- Acta / informe ---------- */
 .acta{background:#fff;color:#111;max-width:820px;margin:0 auto;border:1px solid #cfd3d8;padding:1.2rem 1.4rem;font:13px/1.5 "Times New Roman",Times,serif}
+.acta-logo{text-align:center;margin-bottom:.5rem}
+.acta-logo img{width:68px;height:68px;object-fit:contain}
 .acta-gcba{display:flex;align-items:center;gap:1rem;border-bottom:2px solid #222;padding-bottom:.6rem}
 .acta-gcba img{width:56px;height:56px;object-fit:contain}
 .acta-gcba .txt{flex:1;text-align:center}
@@ -118,13 +128,17 @@ details summary{cursor:pointer;font-weight:600;color:var(--azul2)}
 .acta-campos{display:flex;flex-wrap:wrap;gap:.25rem 1rem;margin-top:.3rem;font-size:.92em}
 .acta-chk{margin:.15rem 0}
 .acta-chk .box{display:inline-grid;place-items:center;width:1rem;height:1rem;border:1px solid #333;font:700 .75rem Arial,sans-serif}
+.acta-tbl{margin:.45rem 0}
+.acta-tbl table{width:100%;border-collapse:collapse;font-size:.92em}
+.acta-tbl th,.acta-tbl td{border:1px solid #888;padding:.32rem .45rem;text-align:left}
+.acta-tbl th{background:#f2f2f2;font-weight:700}
 .mu{color:var(--gris);font-size:.85rem}
 
 /* ---------- Página pública ---------- */
 .pub{background:#fff}
-.pub .hero{background:linear-gradient(135deg,#123a63,#1d5a96);color:#fff;padding:4rem 1rem;text-align:center}
+.pub .hero{background:linear-gradient(135deg,#8f1222,#c4233a);color:#fff;padding:4rem 1rem;text-align:center}
 .pub .hero h1{color:#fff;font-size:2.2rem;margin:.5rem 0}
-.pub .hero p{max-width:640px;margin:.5rem auto 1.3rem;color:#d9e7f4}
+.pub .hero p{max-width:640px;margin:.5rem auto 1.3rem;color:#f7dfe4}
 .pub .hero .btn{background:#fff;color:var(--azul);border-color:#fff}
 .pubnav{position:sticky;top:0;z-index:30;background:#fff;border-bottom:1px solid var(--borde);display:flex;flex-wrap:wrap;gap:.2rem;justify-content:center;padding:.5rem 1rem}
 .pubnav a{padding:.4rem .7rem;border-radius:4px;font-size:.88rem;font-weight:600;color:var(--azul)}
@@ -143,13 +157,13 @@ details summary{cursor:pointer;font-weight:600;color:var(--azul2)}
 .pub footer a{color:#fff}
 
 /* ---------- Login ---------- */
-.login-wrap{min-height:100vh;display:grid;place-items:center;background:linear-gradient(135deg,#123a63,#1d5a96);padding:1rem}
+.login-wrap{min-height:100vh;display:grid;place-items:center;background:linear-gradient(135deg,#8f1222,#c4233a);padding:1rem}
 .login-box{background:#fff;border-radius:10px;padding:2rem;width:100%;max-width:420px;box-shadow:0 12px 40px rgba(0,0,0,.25)}
 .login-box .brand{text-align:center;margin-bottom:1.2rem}
 .login-box .brand img{width:70px}
 .login-box h1{text-align:center;font-size:1.4rem}
 .login-box .sub{text-align:center;color:var(--gris);font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;margin-bottom:1rem}
-.login-box .pre{background:var(--azulcl);border:1px solid #bcd6ea;padding:.7rem;border-radius:5px;font-size:.8rem;margin-top:1rem}
+.login-box .pre{background:var(--azulcl);border:1px solid #f0c6cf;padding:.7rem;border-radius:5px;font-size:.8rem;margin-top:1rem}
 
 /* ---------- Responsive ---------- */
 @media(max-width:960px){.g4{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:repeat(2,1fr)}}

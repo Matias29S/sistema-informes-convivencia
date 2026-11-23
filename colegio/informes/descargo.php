@@ -92,7 +92,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 layout_header('Presentar descargo · ' . $inf['codigo']);
 ?>
 <h1>Presentar descargo</h1>
-<p class="muted">Informe <?= e($inf['codigo']) ?> · incidente del <?= e($inf['fecha_incidente']) ?>. No podrás editarlo una vez enviado.</p>
+<p class="muted">Informe <?= e($inf['codigo']) ?> · incidente del <?= e(fmt_fecha($inf['fecha_incidente'])) ?>. No podrás editarlo una vez enviado.</p>
 <div class="grid g2">
 <div class="card">
   <h2>Datos del informe</h2>

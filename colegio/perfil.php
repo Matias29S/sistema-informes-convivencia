@@ -46,7 +46,7 @@ layout_header('Mi perfil');
  <div class="card">
   <h2>Mis datos</h2>
   <p class="muted">Rol: <b><?= e($u['rol_nombre']) ?></b> · Usuario: <b><?= e($u['username']) ?></b><br>
-   Último acceso: <?= e($u['ultimo_acceso'] ?: '—') ?></p>
+   Último acceso: <?= e($u['ultimo_acceso'] ? fmt_fecha($u['ultimo_acceso']) : '—') ?></p>
   <?php if ($msg): ?><div class="alert ok"><?= e($msg) ?></div><?php endif; ?>
   <?php if ($err): ?><div class="alert err"><?= e($err) ?></div><?php endif; ?>
   <form method="post"><?= csrf_field() ?><input type="hidden" name="accion" value="datos">

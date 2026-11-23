@@ -16,7 +16,7 @@ $fmt = fn($f) => date('d/m/Y', strtotime($f));
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="Escuela Técnica N° 35 D.E. 18 Ing. Eduardo Latzina. Informes de convivencia, institución, noticias y contacto.">
-<meta name="theme-color" content="#123a63">
+<meta name="theme-color" content="#9c1424">
 <title><?= e($escuela) ?> · Sistema de Informes</title>
 <link rel="stylesheet" href="<?= e(url('assets/css/styles.css')) ?>">
 </head>

@@ -50,7 +50,7 @@ layout_header('Panel de control');
 ?>
 
 <h1>Bienvenido/a, <?= e($u['nombre']) ?></h1>
-<p class="muted">Rol: <?= e($u['rol_nombre']) ?> · Último acceso: <?= e($u['ultimo_acceso'] ?: 'primer ingreso') ?></p>
+<p class="muted">Rol: <?= e($u['rol_nombre']) ?> · Último acceso: <?= e($u['ultimo_acceso'] ? fmt_fecha($u['ultimo_acceso']) : 'primer ingreso') ?></p>
 
 <?php if ($rol === 'ADMIN'): ?>
  <div class="grid g4">
@@ -151,12 +151,27 @@ layout_header('Panel de control');
  $st = $pdo->prepare("SELECT COUNT(*) FROM informes i WHERE i.alumno_id=? AND i.estado='PENDIENTE_DESCARGO' AND NOT EXISTS (SELECT 1 FROM descargos d WHERE d.informe_id=i.id)");
  $st->execute([$alumno['id'] ?? 0]); $descPend = (int)$st->fetchColumn();
  ?>
- <div class="grid g3">
-  <div class="stat"><span>Curso y división</span><b style="font-size:1.1rem"><?= e(trim(($alumno['curso'] ?? '') . ' ' . ($alumno['division'] ?? ''))) ?></b></div>
-  <div class="stat"><span>Mis informes</span><b><?= $misInf ?></b></div>
-  <div class="stat"><span>Descargos pendientes</span><b style="color:var(--ambar)"><?= $descPend ?></b></div>
+ <?php
+  // Semáforo: verde sin informes, ámbar 1-2, naranja 3-4, rojo 5 o más.
+  if ($misInf === 0)      { $nivelColor = 'var(--verde)';  $nivelTxt = 'Sin informes';  $nivelLuces = 1; }
+  elseif ($misInf <= 2)   { $nivelColor = '#c9a227';       $nivelTxt = 'Atención';      $nivelLuces = 2; }
+  elseif ($misInf <= 4)   { $nivelColor = '#d2691e';       $nivelTxt = 'Seguimiento';   $nivelLuces = 3; }
+  else                    { $nivelColor = 'var(--rojo)';   $nivelTxt = 'Prioritario';   $nivelLuces = 4; }
+  ?>
+<div class="grid g3">
+ <div class="stat"><span>Curso y división</span><b style="font-size:1.1rem"><?= e(trim(($alumno['curso'] ?? '') . ' ' . ($alumno['division'] ?? ''))) ?></b></div>
+ <div class="stat"><span>Mis informes</span><b><?= $misInf ?></b></div>
+ <div class="stat"><span>Descargos pendientes</span><b style="color:var(--ambar)"><?= $descPend ?></b></div>
+</div>
+<div class="card" style="margin-top:1rem">
+ <h3>Mi estado de convivencia</h3>
+ <div class="estado-alumno" style="--nivel-color:<?= e($nivelColor) ?>">
+  <div class="semaforo" aria-hidden="true">
+   <i class="<?= $nivelLuces >= 1 ? 'on' : '' ?>"></i><i class="<?= $nivelLuces >= 2 ? 'on' : '' ?>"></i><i class="<?= $nivelLuces >= 3 ? 'on' : '' ?>"></i><i class="<?= $nivelLuces >= 4 ? 'on' : '' ?>"></i>
+  </div>
+  <div><b><?= e($nivelTxt) ?></b><small><?= $misInf === 0 ? 'No tenés informes registrados.' : ($misInf === 1 ? 'Tenés 1 informe registrado.' : "Tenés {$misInf} informes registrados.") ?></small></div>
  </div>
- <div class="btn-row">
+</div><div class="btn-row">
   <a class="btn" href="<?= e(url('informes/mis_informes.php')) ?>">Ver mis informes</a>
   <a class="btn g" href="<?= e(url('informes/mis_informes.php?tab=descargos')) ?>">Realizar descargo</a>
   <a class="btn g" href="<?= e(url('notificaciones/listado.php')) ?>">Notificaciones</a>
@@ -192,7 +207,7 @@ layout_header('Panel de control');
        <td><?= e($r['nombre'] . ' ' . $r['apellido']) ?></td>
        <td><?= e($r['dn'] . ' ' . $r['da']) ?></td>
        <td><span class="pill <?= $r['estado'] === 'RESUELTO' ? 'ok' : ($r['estado'] === 'ANULADO' ? 'gray' : 'warn') ?>"><?= e(estado_nombre($r['estado'])) ?></span></td>
-       <td><?= e($r['fecha_creacion']) ?></td></tr>
+       <td><?= e(fmt_fecha($r['fecha_creacion'])) ?></td></tr>
   <?php endforeach; ?>
   </tbody></table></div><?php endif; ?>
 </div>

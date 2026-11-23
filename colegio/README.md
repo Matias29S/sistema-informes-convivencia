@@ -206,7 +206,7 @@ Cada pantalla aplica además un **filtro de datos** por usuario (por ejemplo, el
 
 ## 7. Flujo de estados de un informe
 
-Los posibles valores de `informes.estado` son 8, definidos en `ESTADOS_INFORME` (`includes/functions.php`):
+Los posibles valores de `informes.estado` son 9, definidos en `ESTADOS_INFORME` (`includes/functions.php`):
 
 | # | Estado | Significado / responsable |
 |---|---|---|
@@ -217,9 +217,14 @@ Los posibles valores de `informes.estado` son 8, definidos en `ESTADOS_INFORME` 
 | 5 | `PENDIENTE_CONSEJO_CONVIVENCIA` | Intervención del Consejo de Convivencia (`consejo_convivencia`). |
 | 6 | `PENDIENTE_RESOLUCION` | El directivo debe dictar la resolución. |
 | 7 | `RESUELTO` | Resolución registrada en `resoluciones`; cierra el circuito. |
-| 8 | `ANULADO` | Informe anulado por administración/dirección (sólo ADMIN/DIRECTIVO). |
+| 8 | `REVISADO` | Evento independiente: se inserta en el historial cuando el alumno abre su informe; **no cambia** el estado del trámite. |
+| 9 | `ANULADO` | Informe anulado por administración/dirección (sólo ADMIN/DIRECTIVO). |
 
 Cada cambio usa `cambiar_estado()` y queda registrado en `historial_estados` con usuario, fecha y observación. Las instancias, descargos y resoluciones se clasifican en `clasificaciones`.
+
+Cuando el alumno abre un informe, se marcan las columnas `revisado=1` y `fecha_revision` y se agrega el evento `REVISADO` al historial; el trámite conserva su estado. La tabla `informes` incorporó esas dos columnas (actualizá una instalación existente con `ALTER TABLE informes ADD COLUMN revisado TINYINT(1) NOT NULL DEFAULT 0 AFTER fecha_creacion, ADD COLUMN fecha_revision DATETIME NULL AFTER revisado;`).
+
+Todas las fechas se guardan y muestran en **hora Argentina (UTC-3)**: la conexión PDO aplica `SET time_zone = '-03:00'` y la helper `fmt_fecha()` las formatea en las vistas. El panel del alumno incluye un **semáforo de convivencia** (verde sin informes → ámbar/naranja → rojo a partir de 5 informes).
 
 El pasaje de `PENDIENTE_REVISION` → `EN_REVISION` → `PENDIENTE_DESCARGO` se realiza desde **`informes/revision.php`** (PRECEPTOR, DIRECTIVO o ADMIN). Los archivos de prueba se adjuntan desde **`informes/adjuntos.php`**: se validan por MIME real con `finfo`, tamaño máximo de 5 MB y formatos PDF/JPG/PNG/WEBP; la descarga se resuelve siempre desde la base de datos (`descargar_adjunto.php`), nunca desde un nombre de archivo arbitrario.
 
@@ -229,7 +234,7 @@ El pasaje de `PENDIENTE_REVISION` → `EN_REVISION` → `PENDIENTE_DESCARGO` se 
 
 ### PDF
 
-En el detalle de un informe (`informes/detalle.php?id=INF-0001`) presioná **Descargar PDF**: se genera el acta completa desde `informes/generar_pdf.php?id=INF-0001`.
+En el detalle de un informe (`informes/detalle.php?id=INF-0001`) presioná **Descargar PDF**: se genera el acta completa desde `informes/generar_pdf.php?id=INF-0001`, con el mismo formato de 9 secciones del modelo `Informe_de_Convivencia.docx` y el escudo de la escuela arriba de todo. El generador (`config/pdf.php`) incrusta el PNG del escudo sin depender de Composer.
 
 ### CSV de estadísticas
 

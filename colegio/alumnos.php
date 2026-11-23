@@ -196,7 +196,7 @@ layout_header($alumno ? 'Ficha de alumno' : 'Alumnos');
   <thead><tr><th>Código</th><th>Fecha</th><th>Estado</th><th>Descripción</th></tr></thead><tbody>
   <?php foreach ($informes as $inf): ?>
    <tr><td><a href="<?= e(url('informes/detalle.php?id=' . $inf['codigo'])) ?>"><?= e($inf['codigo']) ?></a></td>
-       <td><?= e($inf['fecha_creacion']) ?></td>
+       <td><?= e(fmt_fecha($inf['fecha_creacion'])) ?></td>
        <td><span class="pill <?= $inf['estado'] === 'RESUELTO' ? 'ok' : ($inf['estado'] === 'ANULADO' ? 'gray' : 'warn') ?>"><?= e(estado_nombre($inf['estado'])) ?></span></td>
        <td><?= e(mb_substr($inf['descripcion'], 0, 140)) ?></td></tr>
   <?php endforeach; ?>

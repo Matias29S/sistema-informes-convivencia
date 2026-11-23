@@ -99,7 +99,7 @@ layout_header('Alumnos asociados');
             <?php $detalle = url('informes/detalle.php?id=' . rawurlencode($inf['codigo'])); ?>
             <tr>
               <td><?= e($inf['codigo']) ?></td>
-              <td><?= e($inf['fecha_incidente']) ?></td>
+              <td><?= e(fmt_fecha($inf['fecha_incidente'])) ?></td>
               <td><?= e(trim($inf['docente_apellido'] . ', ' . $inf['docente_nombre'])) ?></td>
               <td><span class="pill <?= e(pill_estado_tutor($inf['estado'])) ?>"><?= e(estado_nombre($inf['estado'])) ?></span></td>
               <td><a class="btn s" href="<?= e($detalle) ?>">Ver detalle</a></td>
