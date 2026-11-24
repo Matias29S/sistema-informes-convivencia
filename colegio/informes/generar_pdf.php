@@ -1,5 +1,5 @@
 <?php
-/** Acta de convivencia en PDF: una hoja A4, misma información que la vista web. */
+/** Acta de convivencia en PDF: modelo de formulario con campos punteados, en una hoja A4. */
 require_once __DIR__ . '/../config/app.php';
 require_login();
 global $pdo;
@@ -34,7 +34,6 @@ if (!$inf) {
     redirect(in_array($rol, ['ALUMNO', 'TUTOR'], true) ? 'informes/mis_informes.php' : 'informes/listado.php');
 }
 
-// Autorización (idéntica a la vista web).
 $miAlumnoId = 0; $miDocenteId = 0; $miTutorId = 0;
 if ($rol === 'ALUMNO') {
     $st = $pdo->prepare('SELECT id FROM alumnos WHERE usuario_id=?');
@@ -71,112 +70,71 @@ $descargo = $datos('SELECT * FROM descargos WHERE informe_id=?');
 $ca = $datos('SELECT ca.*, us.nombre, us.apellido FROM consejo_aula ca JOIN usuarios us ON us.id=ca.responsable_id WHERE ca.informe_id=?');
 $cc = $datos('SELECT cc.*, us.nombre, us.apellido FROM consejo_convivencia cc JOIN usuarios us ON us.id=cc.responsable_id WHERE cc.informe_id=?');
 $clas = $datos('SELECT cl.*, us.nombre, us.apellido FROM clasificaciones cl JOIN usuarios us ON us.id=cl.responsable_id WHERE cl.informe_id=?');
-$res = $datos('SELECT r.*, us.nombre, us.apellido FROM resoluciones r JOIN usuarios us ON us.id=r.responsable_id WHERE r.informe_id=?');
-$st = $pdo->prepare("SELECT observacion, estado, fecha FROM historial_estados WHERE informe_id=? AND observacion IS NOT NULL AND observacion<>'' ORDER BY fecha");
-$st->execute([$informeId]);
-$observaciones = $st->fetchAll();
 
-$alumno = trim($inf['alumno_nombre'] . ' ' . $inf['alumno_apellido']);
+$alumno  = trim($inf['alumno_nombre'] . ' ' . $inf['alumno_apellido']);
 $docente = trim($inf['docente_apellido'] . ', ' . $inf['docente_nombre']);
 $instancia = $clas['instancia'] ?? '';
+$directivo = $clas ? trim($clas['apellido'] . ', ' . $clas['nombre']) : '';
 
-// ---------- Dibujo ----------
+// ---------- Dibujo del formulario ----------
 const PDF_ROJO  = [0.616, 0.078, 0.145];
 const PDF_CLARO = [0.984, 0.918, 0.929];
-const PDF_GRIS  = [0.965, 0.965, 0.965];
-const PDF_BORDE = [0.820, 0.820, 0.820];
-const PDF_TEXTO = [0.150, 0.150, 0.150];
-const PDF_MUTED = [0.380, 0.380, 0.380];
+const PDF_TEXTO = [0.120, 0.120, 0.120];
+const PDF_GRIS  = [0.380, 0.380, 0.380];
 
-function pv(?string $v): string {
-    $v = trim((string)($v ?? ''));
-    return $v === '' ? '—' : $v;
-}
-
+/** Título de sección: "1.-  Texto". */
 function pt(PDF $p, float $y, string $nro, string $titulo): float {
-    $p->fill(...PDF_ROJO);
-    $p->setFont('B', 9);
+    $p->fill(...PDF_TEXTO);
+    $p->setFont('T', 9.5);
     $p->text(42, $y, $nro . '.-');
-    $p->text(62, $y, $titulo);
-    return $y + 16;
-}
-
-function pc(PDF $p, float $y, string $etiqueta, ?string $valor, float $x, float $w, int $max = 40): void {
-    $p->fill(...PDF_TEXTO);
-    $p->setFont('T', 8.8);
-    $rot = $etiqueta . ': ';
-    $p->text($x, $y, $rot);
-    $px = $x + $p->width($rot);
-    $v = pv($valor);
-    if (mb_strlen($v) > $max) $v = mb_substr($v, 0, $max - 1) . '…';
-    $p->text($px, $y, $v);
-    $p->stroke(...PDF_BORDE);
-    $p->widthLine(0.35);
-    $p->line($px, $y + 1.4, min($px + $p->width($v) + 3, $x + $w), $y + 1.4);
-}
-
-function pq(PDF $p, float $y, ?string $texto, int $max = 2): float {
-    $lineas = $p->wrap(pv($texto), 484);
-    if (count($lineas) > $max) $lineas = array_slice($lineas, 0, $max);
-    $h = count($lineas) * 13 + 11;
-    $p->fill(...PDF_GRIS);
-    $p->filledRect(42, $y, 511.28, $h);
-    $p->fill(...PDF_ROJO);
-    $p->filledRect(42, $y, 2.5, $h);
-    $p->stroke(...PDF_BORDE);
-    $p->widthLine(0.4);
-    $p->rect(42, $y, 511.28, $h);
-    $p->fill(...PDF_TEXTO);
-    $p->setFont('T', 8.6);
-    foreach ($lineas as $i => $l) $p->text(50, $y + 9 + $i * 13, $l);
-    return $y + $h + 8;
-}
-
-function pn(PDF $p, float $y, string $texto): float {
-    $p->fill(...PDF_MUTED);
-    $p->setFont('T', 8);
-    $p->text(42, $y, $texto);
-    return $y + 14;
-}
-
-function pk(PDF $p, float $y, string $instancia): float {
-    $p->setFont('T', 8.8);
-    $p->fill(...PDF_TEXTO);
-    foreach ([[42, 'LEVE', '1ª Instancia LEVE'], [212, 'GRAVE', '2ª Instancia GRAVE'], [382, 'MUY_GRAVE', '3ª Instancia MUY GRAVE']] as [$x, $clave, $texto]) {
-        $p->stroke(...PDF_BORDE);
-        $p->widthLine(0.5);
-        $p->rect($x, $y + 1, 9, 9);
-        if ($instancia === $clave) {
-            $p->fill(...PDF_ROJO);
-            $p->setFont('B', 8);
-            $p->text($x + 2, $y + 8, 'X');
-            $p->setFont('T', 8.8);
-            $p->fill(...PDF_TEXTO);
-        }
-        $p->text($x + 13, $y + 8, $texto);
-    }
+    $p->text(58, $y, $titulo);
     return $y + 18;
 }
 
-function pf(PDF $p, float $y, float $x, float $w, string $titulo): void {
-    $p->fill(...PDF_CLARO);
-    $p->filledRect($x, $y, $w, 15);
-    $p->stroke(...PDF_BORDE);
-    $p->widthLine(0.4);
-    $p->rect($x, $y, $w, 15);
-    $p->line($x + $w - 80, $y, $x + $w - 80, $y + 15);
-    $p->fill(...PDF_ROJO);
-    $p->setFont('B', 8);
-    $p->text($x + 5, $y + 10, $titulo);
-    $p->text($x + $w - 74, $y + 10, 'Fecha');
-    $p->rect($x, $y + 15, $w, 19);
-    $p->line($x + $w - 80, $y + 15, $x + $w - 80, $y + 34);
+/** Texto + puntos guía hasta completar el ancho. */
+function pd(PDF $p, float $y, float $x, string $texto, float $ancho, bool $negrita = false): void {
+    $p->fill(...PDF_TEXTO);
+    $p->setFont($negrita ? 'B' : 'T', 9);
+    $txt = trim($texto);
+    if ($txt !== '' && $p->width($txt) > $ancho - 14) {
+        while ($txt !== '' && $p->width($txt . '…') > $ancho - 14) $txt = mb_substr($txt, 0, -1);
+        $txt .= '…';
+    }
+    if ($txt !== '') $p->text($x, $y, $txt);
+    $cursor = $x + ($txt === '' ? 0 : $p->width($txt) + 5);
+    $p->setFont('T', 8.5);
+    $paso = $p->width('· ');
+    $cant = max(0, (int)floor(($x + $ancho - $cursor) / $paso));
+    if ($cant > 0) $p->text($cursor, $y, str_repeat('· ', $cant));
+}
+
+/** Área de texto: hasta $lineas renglones punteados, con el valor escrito arriba. */
+function pl(PDF $p, float $y, string $texto, int $lineas = 4, float $inter = 16): float {
+    $lineasTexto = $texto === '' ? [] : array_slice($p->wrap($texto, 480), 0, $lineas);
+    for ($i = 0; $i < $lineas; $i++) {
+        pd($p, $y + $i * $inter, 42, $lineasTexto[$i] ?? '', 511.28);
+    }
+    return $y + $lineas * $inter;
+}
+
+function pcheck(PDF $p, float $y, float $x, string $texto, bool $marcado): void {
+    $p->stroke(...PDF_TEXTO);
+    $p->widthLine(0.7);
+    $p->rect($x, $y + 1, 9, 9);
+    if ($marcado) {
+        $p->fill(...PDF_ROJO);
+        $p->setFont('B', 9);
+        $p->text($x + 2, $y + 9, 'X');
+    }
+    $p->fill(...PDF_TEXTO);
+    $p->setFont('T', 9.5);
+    $p->text($x + 16, $y + 9, $texto);
 }
 
 $pdf = new PDF();
 $pdf->addPage();
 
-// Encabezado.
+// Encabezado institucional.
 $pdf->image(__DIR__ . '/../assets/img/escudo.png', 280.64, 22, 34, 34);
 $pdf->fill(...PDF_TEXTO);
 $pdf->setFont('B', 8);
@@ -197,93 +155,71 @@ $pdf->line(42, 112, 553.28, 112);
 
 $y = 124.0;
 
-// 1. El alumno/a.
-$y = pt($pdf, $y, '1', 'El alumno/a');
-pc($pdf, $y, 'Apellido y nombre', $alumno, 42, 248, 38);
-pc($pdf, $y, 'Curso', $inf['curso'], 305, 248, 24); $y += 15;
-pc($pdf, $y, 'División', $inf['division'], 42, 248, 24);
-pc($pdf, $y, 'Legajo', $inf['legajo'], 305, 248, 24); $y += 15;
-pc($pdf, $y, 'DNI', $inf['alumno_dni'], 42, 248, 24);
-pc($pdf, $y, 'Fecha del incidente', fmt_fecha($inf['fecha_incidente']), 305, 248, 24); $y += 19;
+// 1.- El alumno/a.
+$y = pt($pdf, $y, '1', 'El alumno/a:');
+pd($pdf, $y, 42, $alumno, 244);
+pd($pdf, $y, 296, 'de ' . $inf['curso'] . ' año,', 96);
+pd($pdf, $y, 402, 'División ' . $inf['division'], 151.28);
+$y += 18;
 
-// 2. Acción.
+// 2.- Acción.
 $y = pt($pdf, $y, '2', 'Ha realizado la acción que se describe a continuación:');
-$y = pq($pdf, $y, $inf['descripcion']);
-pc($pdf, $y, 'Normas transgredidas', $inf['normas'], 42, 511.28, 88); $y += 15;
-$y = pn($pdf, $y, 'transgrediendo Normas del Reglamento de Convivencia de la escuela.');
+$y = pl($pdf, $y, (string)($inf['descripcion'] ?? ''), 4);
+pd($pdf, $y, 42, 'transgrediendo Normas del Reglamento de Convivencia de la escuela.', 511.28);
+$y += 20;
 
-// 3. Solicitud de sanción.
+// 3.- Solicitud de sanción.
 $y = pt($pdf, $y, '3', 'Solicitud de sanción:');
-pc($pdf, $y, 'Docente', $docente, 42, 248, 34);
-pc($pdf, $y, 'Cargo/función', $inf['cargo'], 305, 248, 26); $y += 15;
-pc($pdf, $y, 'Fecha', fmt_fecha($inf['fecha_incidente'], false), 42, 248, 20);
-pc($pdf, $y, 'Firma', $inf['firma_digital'], 305, 248, 26); $y += 15;
-pc($pdf, $y, 'Categoría solicitada', $inf['solicitud_sancion'], 42, 511.28, 86); $y += 19;
+pd($pdf, $y, 42, 'Docente: ' . $docente, 138);
+pd($pdf, $y, 182, 'Cargo/función: ' . ($inf['cargo'] ?? ''), 140);
+pd($pdf, $y, 326, 'Fecha: ' . fmt_fecha($inf['fecha_incidente'], false), 82);
+pd($pdf, $y, 412, 'Firma: ' . ($inf['firma_digital'] ?? ''), 141.28);
+$y += 20;
 
-// 4. Descargo.
+// 4.- Descargo.
 $y = pt($pdf, $y, '4', 'Descargo del Alumno/a:');
-$y = pq($pdf, $y, $descargo['descripcion'] ?? 'Sin registrar');
-if ($descargo) {
-    pc($pdf, $y, 'Observaciones', $descargo['observaciones'] ?? '', 42, 248, 26);
-    pc($pdf, $y, 'Identificación', $alumno . ' · ' . $inf['legajo'], 305, 248, 26); $y += 15;
-    pc($pdf, $y, 'Fecha de presentación', fmt_fecha($descargo['fecha_presentacion']), 42, 511.28, 36); $y += 15;
-}
+$y = pl($pdf, $y, (string)($descargo['descripcion'] ?? ''), 3);
+$y += 6;
 
-// 5. Consejo de Aula.
+// 5.- Consejo de Aula.
 $y = pt($pdf, $y, '5', 'Informe de Consejo de Aula');
-$y = pq($pdf, $y, $ca['observaciones'] ?? 'Sin registrar');
-if ($ca) {
-    pc($pdf, $y, 'Evaluación', $ca['evaluacion'] ?? '', 42, 248, 26);
-    pc($pdf, $y, 'Recomendaciones', $ca['recomendaciones'] ?? '', 305, 248, 26); $y += 15;
-    pc($pdf, $y, 'Responsable', trim($ca['apellido'] . ', ' . $ca['nombre']), 42, 248, 28);
-    pc($pdf, $y, 'Fecha de intervención', fmt_fecha($ca['fecha_intervencion']), 305, 248, 24); $y += 15;
-}
+$y = pl($pdf, $y, (string)($ca['observaciones'] ?? ''), 2);
+$y += 6;
 
-// 6. Consejo de Convivencia.
+// 6.- Consejo de Convivencia.
 $y = pt($pdf, $y, '6', 'Informe de Consejo de Convivencia');
-$y = pq($pdf, $y, $cc['observaciones'] ?? 'Sin registrar');
-if ($cc) {
-    pc($pdf, $y, 'Análisis', $cc['analisis'] ?? '', 42, 248, 26);
-    pc($pdf, $y, 'Recomendaciones', $cc['recomendaciones'] ?? '', 305, 248, 26); $y += 15;
-    pc($pdf, $y, 'Intervención', $cc['intervencion'] ?? '', 42, 248, 26);
-    pc($pdf, $y, 'Responsable', trim($cc['apellido'] . ', ' . $cc['nombre']), 305, 248, 26); $y += 15;
-    pc($pdf, $y, 'Fecha de intervención', fmt_fecha($cc['fecha_intervencion']), 42, 511.28, 34); $y += 15;
-}
+$y = pl($pdf, $y, (string)($cc['observaciones'] ?? ''), 2);
+$y += 6;
 
-// 7. Observaciones.
+// 7.- Observaciones.
 $y = pt($pdf, $y, '7', 'Observaciones');
-if ($observaciones) {
-    foreach ($observaciones as $ob) {
-        $y = pq($pdf, $y, $ob['observacion'], 2);
-        $y = pn($pdf, $y, estado_nombre($ob['estado']) . ' · ' . fmt_fecha($ob['fecha']));
-    }
-} else {
-    $y = pq($pdf, $y, 'Sin observaciones registradas.', 1);
-}
+$y = pl($pdf, $y, '', 2);
 
-// 8. Corresponde.
+// 8.- Corresponde.
 $y = pt($pdf, $y, '8', 'Se considera que corresponde: (Indicar a continuación)');
-$y = pk($pdf, $y, $instancia);
-pc($pdf, $y, 'Otra consideración', $clas['otra_consideracion'] ?? '', 42, 511.28, 86); $y += 15;
-if ($res) {
-    pc($pdf, $y, 'Decisión', $res['decision'] ?? '', 42, 248, 26);
-    pc($pdf, $y, 'Medida institucional', $res['medida'] ?? '', 305, 248, 26); $y += 15;
-    $y = pq($pdf, $y, $res['fundamentacion'] ?? '', 2);
-}
-pc($pdf, $y, 'Firma Directivo', $clas ? trim($clas['apellido'] . ', ' . $clas['nombre']) : '', 42, 248, 28);
-pc($pdf, $y, 'Fecha', fmt_fecha($clas['fecha'] ?? '', false), 305, 248, 20); $y += 19;
+pcheck($pdf, $y, 42, '1ª Instancia  LEVE', $instancia === 'LEVE');
+pcheck($pdf, $y + 17, 42, '2ª Instancia  GRAVE', $instancia === 'GRAVE');
+pcheck($pdf, $y + 34, 42, '3ª Instancia  MUY GRAVE', $instancia === 'MUY_GRAVE');
+$y += 62;
+pd($pdf, $y, 42, 'Otra consideración: ' . ($clas['otra_consideracion'] ?? ''), 511.28);
+$y += 20;
+pd($pdf, $y, 42, 'Firma Directivo: ' . $directivo, 300);
+$fechaDirectivo = !empty($clas['fecha']) ? 'Fecha: ' . fmt_fecha($clas['fecha'], false) : 'Fecha: ';
+pd($pdf, $y, 352, $fechaDirectivo, 201.28);
+$y += 22;
 
-// 9. Notificación: sólo casilleros vacíos.
+// 9.- Notificación: sólo los espacios para firma y fecha.
 $y = pt($pdf, $y, '9', 'Notificación:');
-pf($pdf, $y, 42, 248, 'Alumno');
-pf($pdf, $y, 305, 248.28, 'Padre/Madre/Tutor');
-$y = pn($pdf, $y + 37, 'Espacios reservados para la firma y la fecha de notificación.');
+pd($pdf, $y, 42, 'Alumno: ', 300); $y += 18;
+pd($pdf, $y, 42, 'Fecha: ', 200); $y += 18;
+pd($pdf, $y, 42, 'Padre/Madre/Tutor: ', 320); $y += 18;
+pd($pdf, $y, 42, 'Fecha: ', 200);
 
 // Pie.
 $pdf->stroke(...PDF_CLARO);
 $pdf->widthLine(0.8);
 $pdf->line(42, 800, 553.28, 800);
-$pdf->fill(...PDF_MUTED);
+$pdf->fill(...PDF_GRIS);
 $pdf->setFont('T', 7.5);
 $pdf->text(42, 811, 'Sistema de Gestión de Informes de Convivencia · E.E.T. N° 35 D.E. 18');
 $pdf->textRight(553.28, 811, 'Página 1 / 1');
