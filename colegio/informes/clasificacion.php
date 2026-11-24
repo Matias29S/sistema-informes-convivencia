@@ -51,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     if ($instancia !== 'OTRA') $otra = '';
 
-    $fecha = date('Y-m-d H:i:s');
+    $fecha = ahora_db();
     try {
         if ($existente) {
             $st = $pdo->prepare('UPDATE clasificaciones SET instancia=?, otra_consideracion=?, responsable_id=?, fecha=? WHERE informe_id=?');

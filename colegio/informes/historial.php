@@ -171,7 +171,7 @@ layout_header('Historial · ' . $codigo);
     <h2>Accesos rápidos</h2>
     <div class="btn-row">
       <a class="btn g" href="<?= e(url($detalleUrl)) ?>">Ver informe</a>
-      <a class="btn g" href="<?= e(url('informes/generar_pdf.php?id=' . rawurlencode($codigo))) ?>">Descargar PDF</a>
+      <a class="btn g" href="<?= e(pdf_url($codigo)) ?>">Descargar PDF</a>
     </div>
   </div>
 </div>

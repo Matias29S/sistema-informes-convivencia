@@ -82,7 +82,7 @@ if ($rol === 'ALUMNO' && $miAlumnoId > 0 && (int)$inf['alumno_id'] === $miAlumno
             $st = $pdo->prepare('INSERT INTO historial_estados (informe_id, estado, usuario_id, observacion) VALUES (?,?,?,?)');
             $st->execute([$informeId, 'REVISADO', $uid, 'Informe revisado por el alumno/a']);
             $inf['revisado'] = 1;
-            $inf['fecha_revision'] = date('Y-m-d H:i:s');
+            $inf['fecha_revision'] = ahora_db();
         }
     } catch (PDOException $e) {
         // Si la migración todavía no se aplicó, el informe sigue siendo visible igual.
@@ -282,22 +282,13 @@ layout_header('Informe ' . $inf['codigo']);
       Notificación:
       <div class="acta-tbl"><table>
         <thead><tr><th>Alumno</th><th>Fecha</th></tr></thead>
-        <tbody>
-          <tr><td><?= e(trim($inf['alumno_apellido'] . ', ' . $inf['alumno_nombre'])) ?></td>
-              <td><?= e(!empty($inf['revisado']) ? fmt_fecha($inf['fecha_revision']) : 'Pendiente') ?></td></tr>
-        </tbody>
+        <tbody><tr><td>&nbsp;</td><td>&nbsp;</td></tr></tbody>
       </table></div>
       <div class="acta-tbl"><table>
         <thead><tr><th>Padre/Madre/Tutor</th><th>Fecha</th></tr></thead>
-        <tbody>
-        <?php if (!$tutores): ?><tr><td colspan="2" class="mu">Sin tutores asociados</td></tr>
-        <?php else: foreach ($tutores as $t): ?>
-          <tr><td><?= e(trim($t['apellido'] . ', ' . $t['nombre']) . ' (' . $t['relacion'] . ')') ?></td>
-              <td><?= e(fmt_fecha($inf['fecha_creacion'])) ?></td></tr>
-        <?php endforeach; endif; ?>
-        </tbody>
+        <tbody><tr><td>&nbsp;</td><td>&nbsp;</td></tr></tbody>
       </table></div>
-      <small>Creado el <?= e(fmt_fecha($inf['fecha_creacion'])) ?><?php if (!empty($inf['revisado'])): ?> · Revisado por el alumno/a el <?= e(fmt_fecha($inf['fecha_revision'])) ?><?php endif; ?></small>
+      <small>Espacios reservados para la firma y la fecha de notificación.</small>
     </div></div>
   </div>
 
@@ -332,7 +323,7 @@ layout_header('Informe ' . $inf['codigo']);
         <a class="btn" href="<?= e(url('informes/clasificacion.php?id=' . rawurlencode($inf['codigo']))) ?>">Clasificación</a>
         <a class="btn" href="<?= e(url('informes/resolucion.php?id=' . rawurlencode($inf['codigo']))) ?>">Resolución</a>
       <?php endif; ?>
-      <a class="btn g" href="<?= e(url('informes/generar_pdf.php?id=' . rawurlencode($inf['codigo']))) ?>">Descargar PDF</a>
+      <a class="btn g" href="<?= e(pdf_url($inf['codigo'], $inf['actualizado_en'] ?? $inf['fecha_creacion'])) ?>">Descargar PDF</a>
       <a class="btn g" href="<?= e(url('informes/adjuntos.php?id=' . rawurlencode($inf['codigo']))) ?>">Adjuntos</a>
       <a class="btn g" href="<?= e(url('informes/historial.php?id=' . rawurlencode($inf['codigo']))) ?>">Historial</a>
       <?php if (in_array($rol, ['ALUMNO', 'TUTOR'], true)): ?>

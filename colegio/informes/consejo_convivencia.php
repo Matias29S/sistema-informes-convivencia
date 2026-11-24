@@ -65,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         redirect('informes/consejo_convivencia.php?id=' . rawurlencode($inf['codigo']));
     }
 
-    $fecha = date('Y-m-d H:i:s');
+    $fecha = ahora_db();
     try {
         $pdo->beginTransaction();
         if ($existente) {

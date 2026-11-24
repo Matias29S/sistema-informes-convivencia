@@ -10,6 +10,9 @@ class PDF {
     private array $fonts = ['N' => 3, 'B' => 4];
     private string $font = 'N';
     private float $size = 11;
+    private array $stroke = [0, 0, 0];
+    private array $fill = [0, 0, 0];
+    private float $lineWidth = 0.6;
     private const W = 595.28;
     private const H = 841.89;
 
@@ -18,6 +21,30 @@ class PDF {
     public function setFont(string $font, float $size): void {
         $this->font = isset($this->fonts[$font]) ? $font : 'N';
         $this->size = $size;
+    }
+
+    /** Color de trazo para líneas y bordes (RGB 0..1). */
+    public function setStroke(float $r, float $g, float $b): void {
+        $this->stroke = [$r, $g, $b];
+        $this->cmd(sprintf('%.3F %.3F %.3F RG', $r, $g, $b));
+    }
+
+    /** Color de relleno; también se aplica al texto. */
+    public function setFill(float $r, float $g, float $b): void {
+        $this->fill = [$r, $g, $b];
+        $this->cmd(sprintf('%.3F %.3F %.3F rg', $r, $g, $b));
+    }
+
+    public function setText(float $r, float $g, float $b): void { $this->setFill($r, $g, $b); }
+
+    public function setLineWidth(float $w): void {
+        $this->lineWidth = $w;
+        $this->cmd(sprintf('%.2F w', $w));
+    }
+
+    /** Rectángulo relleno (coordenadas desde la esquina superior izquierda). */
+    public function filledRect(float $x, float $y, float $w, float $h): void {
+        $this->cmd(sprintf('%.2F %.2F %.2F %.2F re f', $x, $this->y($y + $h), $w, $h));
     }
 
     private function cmd(string $s): void {
@@ -60,8 +87,48 @@ class PDF {
         $this->text($center - $this->width($s) / 2, $y, $s);
     }
 
+    /** Anchos Helvetica en milésimas (ASCII 32..126), normal y negrita. */
+    private static function metrics(string $font): array {
+        static $cache = [];
+        if (isset($cache[$font])) return $cache[$font];
+        $w = $font === 'B' ? [
+            278,333,474,556,556,889,722,238,333,333,389,584,278,333,278,278,
+            556,556,556,556,556,556,556,556,556,556,333,333,584,584,584,611,
+            975,722,722,722,722,667,611,778,722,278,556,722,611,833,722,778,667,
+            778,722,667,611,722,667,944,667,667,611,333,278,333,584,556,333,
+            556,611,556,611,556,333,611,611,278,278,556,278,889,611,611,611,
+            611,389,556,333,611,556,778,556,556,500,389,280,389,584
+        ] : [
+            278,278,355,556,556,889,667,191,333,333,389,584,278,333,278,278,
+            556,556,556,556,556,556,556,556,556,556,278,278,584,584,584,556,
+            1015,667,667,722,722,667,611,778,722,278,500,667,556,833,722,778,667,
+            778,722,667,611,722,667,944,667,667,611,278,278,278,469,556,333,
+            556,556,500,556,556,278,556,556,222,222,500,222,833,556,556,556,
+            556,333,500,278,556,500,722,500,500,500,334,260,334,584
+        ];
+        $m = [];
+        foreach ($w as $i => $v) $m[32 + $i] = $v / 1000;
+        return $cache[$font] = $m;
+    }
+
+    /** Ancho real de un texto con la tipografía y tamaño actuales. */
     public function width(string $s): float {
-        return mb_strlen($s, 'UTF-8') * $this->size * 0.5;
+        $m = self::metrics($this->font);
+        $base = [
+            'á'=>'a','é'=>'e','í'=>'i','ó'=>'o','ú'=>'u','ñ'=>'n','ü'=>'u',
+            'Á'=>'A','É'=>'E','Í'=>'I','Ó'=>'O','Ú'=>'U','Ñ'=>'N','Ü'=>'U',
+            'ª'=>'a','º'=>'o','°'=>'0','¿'=>'?','¡'=>'!','“'=>'"','”'=>'"',
+            '‘'=>"'",'’'=>"'",'–'=>'-','—'=>'-','…'=>'.','€'=>'E','£'=>'L',
+            '¢'=>'c','§'=>'S','©'=>'c','®'=>'r','±'=>'+','½'=>'0','¼'=>'0','¾'=>'0',
+            '×'=>'x','÷'=>'/','µ'=>'u'
+        ];
+        $total = 0.0;
+        foreach (preg_split('//u', $s, -1, PREG_SPLIT_NO_EMPTY) ?: [] as $ch) {
+            if (isset($base[$ch])) $ch = $base[$ch];
+            $o = strlen($ch) === 1 ? ord($ch) : 0;
+            $total += $m[$o] ?? 0.55;
+        }
+        return $total * $this->size;
     }
 
     public function line(float $x1, float $y1, float $x2, float $y2): void {

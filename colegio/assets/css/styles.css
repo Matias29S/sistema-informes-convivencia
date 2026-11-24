@@ -108,30 +108,31 @@ details summary{cursor:pointer;font-weight:600;color:var(--azul2)}
 .estado-alumno small{display:block}
 
 /* ---------- Acta / informe ---------- */
-.acta{background:#fff;color:#111;max-width:820px;margin:0 auto;border:1px solid #cfd3d8;padding:1.2rem 1.4rem;font:13px/1.5 "Times New Roman",Times,serif}
-.acta-logo{text-align:center;margin-bottom:.5rem}
-.acta-logo img{width:68px;height:68px;object-fit:contain}
-.acta-gcba{display:flex;align-items:center;gap:1rem;border-bottom:2px solid #222;padding-bottom:.6rem}
+.acta{background:#fff;color:#111;max-width:820px;margin:0 auto;border:1px solid #e3c6cc;border-top:5px solid var(--azul);padding:1.1rem 1.3rem;font:13px/1.5 "Times New Roman",Times,serif}
+.acta-logo{text-align:center;margin-bottom:.35rem}
+.acta-logo img{width:36px;height:36px;object-fit:contain}
+.acta-gcba{display:flex;align-items:center;gap:1rem;border-bottom:2px solid var(--azul);padding-bottom:.5rem}
 .acta-gcba img{width:56px;height:56px;object-fit:contain}
 .acta-gcba .txt{flex:1;text-align:center}
-.acta-gcba .sup{font:700 .7rem Arial,sans-serif}
-.acta-gcba .sub{font:700 .65rem Arial,sans-serif}
-.acta-gcba .esc{font:700 .85rem "Times New Roman",serif;margin-top:.2rem}
-.acta-gcba .nro{border:1px solid #999;padding:.3rem .5rem;text-align:center;min-width:90px}
-.acta-titulo{text-align:center;font:700 1.1rem "Times New Roman",serif;letter-spacing:.04em;padding:.7rem;border-bottom:1px solid #222}
-.acta-sec{display:grid;grid-template-columns:2rem 1fr;gap:.3rem;padding:.55rem 0;border-bottom:1px solid #ddd}
-.acta-sec:last-child{border:0}
-.acta-sec .num{font-weight:700}
-.acta-linea{display:inline-block;min-width:7rem;border-bottom:1px solid #555;padding:0 .15rem}
+.acta-gcba .sup{font:700 .7rem Arial,sans-serif;color:#333}
+.acta-gcba .sub{font:700 .65rem Arial,sans-serif;color:#555}
+.acta-gcba .esc{font:700 .85rem "Times New Roman",serif;margin-top:.2rem;color:var(--azul)}
+.acta-gcba .nro{border:1px solid #d9a7b0;padding:.3rem .5rem;text-align:center;min-width:90px}
+.acta-titulo{text-align:center;font:700 1.15rem Arial,sans-serif;letter-spacing:.06em;color:var(--azul);padding:.7rem;border-bottom:1px solid var(--azulcl)}
+.acta-sec{display:grid;grid-template-columns:2rem 1fr;gap:.35rem;padding:.6rem .7rem;margin:.45rem 0;background:#fafafa;border:1px solid #eadfe1;border-left:3px solid var(--azul);border-radius:2px}
+.acta-sec:last-child{border-bottom:1px solid #eadfe1}
+.acta-sec .num{font:700 .9rem Arial,sans-serif;color:var(--azul)}
+.acta-linea{display:inline-block;min-width:7rem;border-bottom:1px solid #b98b93;padding:0 .15rem}
 .acta-corto{min-width:3.5rem;text-align:center}
-.acta-cuadro{border:1px solid #bbb;min-height:2.8rem;padding:.3rem .4rem;margin:.3rem 0;white-space:pre-wrap}
+.acta-cuadro{border:1px solid #e0d2d5;border-left:3px solid var(--azul);background:#f6f6f6;min-height:2.8rem;padding:.35rem .5rem;margin:.3rem 0;white-space:pre-wrap}
 .acta-campos{display:flex;flex-wrap:wrap;gap:.25rem 1rem;margin-top:.3rem;font-size:.92em}
 .acta-chk{margin:.15rem 0}
-.acta-chk .box{display:inline-grid;place-items:center;width:1rem;height:1rem;border:1px solid #333;font:700 .75rem Arial,sans-serif}
+.acta-chk .box{display:inline-grid;place-items:center;width:1rem;height:1rem;border:1px solid var(--azul);font:700 .75rem Arial,sans-serif;color:var(--azul)}
 .acta-tbl{margin:.45rem 0}
 .acta-tbl table{width:100%;border-collapse:collapse;font-size:.92em}
-.acta-tbl th,.acta-tbl td{border:1px solid #888;padding:.32rem .45rem;text-align:left}
-.acta-tbl th{background:#f2f2f2;font-weight:700}
+.acta-tbl th,.acta-tbl td{border:1px solid #d7c3c7;padding:.32rem .45rem;text-align:left}
+.acta-tbl td{height:2.1rem}
+.acta-tbl th{background:var(--azulcl);color:var(--azul);font-family:Arial,sans-serif;font-weight:700}
 .mu{color:var(--gris);font-size:.85rem}
 
 /* ---------- Página pública ---------- */
@@ -184,6 +185,10 @@ details summary{cursor:pointer;font-weight:600;color:var(--azul2)}
   .sidebar,.topbar,.btn,.alert,.menu-btn{display:none!important}
   .content{padding:0;max-width:none}
   .card{border:0;box-shadow:none}
-  .acta{border:0;max-width:none}
-  @page{size:A4;margin:14mm}
+  .acta{border:0;max-width:none;padding:0;font-size:10px;line-height:1.35}
+  .acta-logo{margin-bottom:.2rem}
+  .acta-logo img{width:30px;height:30px}
+  .acta-sec{padding:.35rem 0}
+  .acta-cuadro{min-height:0}
+  @page{size:A4;margin:12mm}
 }

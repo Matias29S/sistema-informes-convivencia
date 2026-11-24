@@ -115,7 +115,7 @@ layout_header('Seguimiento de informes');
         <td>
           <a class="btn s" href="<?= e(url('informes/detalle.php?id=' . rawurlencode($r['codigo']))) ?>">Ver</a>
           <a class="btn s" href="<?= e(url('informes/historial.php?id=' . rawurlencode($r['codigo']))) ?>">Historial</a>
-          <a class="btn s" href="<?= e(url('informes/generar_pdf.php?id=' . rawurlencode($r['codigo']))) ?>">PDF</a>
+          <a class="btn s" href="<?= e(pdf_url($r['codigo'], $r['actualizado_en'] ?? null)) ?>">PDF</a>
         </td>
       </tr>
     <?php endforeach; ?>

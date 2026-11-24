@@ -71,7 +71,7 @@ function layout_header(string $titulo = '', string $modulo = ''): void {
 <meta name="theme-color" content="#9c1424">
 <meta name="csrf-token" content="<?= e(csrf_token()) ?>">
 <title><?= e(($titulo ? $titulo . ' - ' : '') . APP_NAME) ?> - ET35</title>
-<link rel="stylesheet" href="<?= e(url('assets/css/styles.css')) ?>">
+<link rel="stylesheet" href="<?= e(asset_url('css/styles.css')) ?>">
 <script>window.BASE_URL = <?= json_encode(BASE_URL) ?>;</script>
 </head>
 <body class="app-body">

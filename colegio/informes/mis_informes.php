@@ -93,7 +93,7 @@ layout_header('Mis informes');
         <td><span class="pill <?= e(clase_estado_alumno($r['estado'])) ?>"><?= e(estado_nombre($r['estado'])) ?></span></td>
         <td>
           <a class="btn s" href="<?= e(url($urlDetalle)) ?>">Ver</a>
-          <a class="btn s" href="<?= e(url('informes/generar_pdf.php?id=' . rawurlencode($r['codigo']))) ?>">PDF</a>
+          <a class="btn s" href="<?= e(pdf_url($r['codigo'], $r['actualizado_en'] ?? null)) ?>">PDF</a>
           <?php if ($rol === 'ALUMNO' && $r['estado'] === 'PENDIENTE_DESCARGO'): ?>
             <a class="btn s" href="<?= e(url('informes/descargo.php?id=' . rawurlencode($r['codigo']))) ?>">Descargar</a>
           <?php endif; ?>

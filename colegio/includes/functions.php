@@ -5,17 +5,53 @@ function e($s): string {
     return htmlspecialchars((string)($s ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
 
-/** Formatea un DATETIME de MySQL en fecha legible, usando la hora de Argentina. */
+/** Zona horaria única del sistema: todas las fechas se guardan y muestran en UTC-3. */
+function tz_argentina(): DateTimeZone {
+    static $tz = null;
+    if ($tz === null) $tz = new DateTimeZone('America/Argentina/Buenos_Aires');
+    return $tz;
+}
+
+/** Fecha/hora actual en Argentina para escribir en columnas DATETIME. */
+function ahora_db(): string {
+    return (new DateTimeImmutable('now', tz_argentina()))->format('Y-m-d H:i:s');
+}
+
+/**
+ * Formatea un DATETIME de MySQL en fecha legible.
+ * La zona se fija explícitamente: el valor ya viene en hora Argentina de la BD,
+ * así que no dependemos de la configuración de PHP del servidor.
+ */
 function fmt_fecha($valor, bool $conHora = true): string {
     $s = trim((string)($valor ?? ''));
     if ($s === '' || $s === '0000-00-00 00:00:00') return '—';
-    $ts = strtotime($s);
-    if ($ts === false) return e($s);
-    return date($conHora ? 'd/m/Y H:i' : 'd/m/Y', $ts);
+    try {
+        $dt = new DateTimeImmutable($s, tz_argentina());
+        return $dt->format($conHora ? 'd/m/Y H:i' : 'd/m/Y');
+    } catch (Exception $e) {
+        return e($s);
+    }
 }
 
 function url(string $path = ''): string {
     return BASE_URL . ltrim($path, '/');
+}
+
+/** URL de un asset con versión por filemtime: evita caché vieja al actualizar. */
+function asset_url(string $path): string {
+    $rel = ltrim($path, '/');
+    $v = @filemtime(__DIR__ . '/../assets/' . $rel) ?: 0;
+    return url('assets/' . $rel . '?v=' . $v);
+}
+
+/** URL del PDF con versión: cambia al editar el generador o el informe. */
+function pdf_url(string $codigo, ?string $actualizado = null): string {
+    $v = @filemtime(__DIR__ . '/../informes/generar_pdf.php') ?: 0;
+    if ($actualizado) {
+        $t = strtotime($actualizado);
+        if ($t) $v = max($v, $t);
+    }
+    return url('informes/generar_pdf.php?id=' . rawurlencode($codigo) . '&v=' . $v);
 }
 
 function redirect(string $path): void {

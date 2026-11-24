@@ -60,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         $pdo->beginTransaction();
         $st = $pdo->prepare('INSERT INTO descargos (informe_id, alumno_id, descripcion, observaciones, fecha_presentacion, firmado) VALUES (?,?,?,?,?,1)');
-        $st->execute([(int)$inf['id'], $alumnoId, $descripcion, $observaciones, date('Y-m-d H:i:s')]);
+        $st->execute([(int)$inf['id'], $alumnoId, $descripcion, $observaciones, ahora_db()]);
         cambiar_estado((int)$inf['id'], 'PENDIENTE_CONSEJO_AULA', 'Descargo presentado por el alumno');
         audit('CREAR_DESCARGO', 'descargos', (string)$inf['id'], 'Descargo del informe ' . $inf['codigo']);
         $pdo->commit();

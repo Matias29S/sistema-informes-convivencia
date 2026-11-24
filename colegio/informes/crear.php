@@ -117,7 +117,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $codigo = next_codigo_informe();
     $divisionId = (int)$alumno['division_id'];
-    $fechaCreacion = date('Y-m-d H:i:s');
+    $fechaCreacion = ahora_db();
 
     try {
         $pdo->beginTransaction();
@@ -212,7 +212,7 @@ layout_header('Crear informe de convivencia');
   <div class="grid g2">
     <div>
       <label for="fecha_creacion">Fecha de creación (automática)</label>
-      <input id="fecha_creacion" type="text" value="<?= e(date('d/m/Y H:i')) ?>" readonly>
+      <input id="fecha_creacion" type="text" value="<?= e(fmt_fecha(ahora_db())) ?>" readonly>
     </div>
     <div>
       <label for="firma">Firma / identificación digital (automática)</label>

@@ -65,7 +65,7 @@ function intentar_login(string $usuario, string $clave): array {
         $pdo->prepare('INSERT INTO intentos_login (email,ip,exitoso) VALUES (?,?,0)')->execute([$usuario, $ip]);
         if ($u) {
             $n = (int)$u['intentos'] + 1;
-            $bloqueo = $n >= 5 ? date('Y-m-d H:i:s', strtotime('+15 minutes')) : null;
+            $bloqueo = $n >= 5 ? (new DateTimeImmutable('+15 minutes', tz_argentina()))->format('Y-m-d H:i:s') : null;
             $pdo->prepare('UPDATE usuarios SET intentos=?, bloqueado_hasta=? WHERE id=?')->execute([$n, $bloqueo, $u['id']]);
             if ($bloqueo) return [false, 'Cuenta bloqueada por 15 minutos por intentos fallidos.'];
         }

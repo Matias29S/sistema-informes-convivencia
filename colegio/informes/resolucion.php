@@ -59,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         redirect('informes/resolucion.php?id=' . rawurlencode($inf['codigo']));
     }
 
-    $fecha = date('Y-m-d H:i:s');
+    $fecha = ahora_db();
     try {
         $pdo->beginTransaction();
         $st = $pdo->prepare('INSERT INTO resoluciones (informe_id, decision, medida, fundamentacion, responsable_id, fecha, observaciones) VALUES (?,?,?,?,?,?,?)');

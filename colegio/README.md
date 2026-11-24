@@ -114,7 +114,8 @@ colegio/
 │   ├── mail.php         Envío de correos: modo log o SMTP.
 │   └── pdf.php          Generador de PDF liviano propio (A4, Helvetica, sin Composer).
 ├── includes/
-│   ├── functions.php    Helper globales: e(), url(), csrf, flash(), notify(), audit(), estados...
+│   ├── functions.php    Helper globales: e(), url(), asset_url(), pdf_url(), csrf, flash(),
+│   │                    notify(), audit(), estados, tz_argentina(), ahora_db(), fmt_fecha()...
 │   ├── auth.php         Login, current_user(), require_login(), require_role(), permisos.
 │   └── layout.php       Cabecera, menú, mensajes y pie de todas las páginas privadas.
 ├── admin/               Gestión: usuarios, permisos, configuración, noticias, eventos,
@@ -224,7 +225,13 @@ Cada cambio usa `cambiar_estado()` y queda registrado en `historial_estados` con
 
 Cuando el alumno abre un informe, se marcan las columnas `revisado=1` y `fecha_revision` y se agrega el evento `REVISADO` al historial; el trámite conserva su estado. La tabla `informes` incorporó esas dos columnas (actualizá una instalación existente con `ALTER TABLE informes ADD COLUMN revisado TINYINT(1) NOT NULL DEFAULT 0 AFTER fecha_creacion, ADD COLUMN fecha_revision DATETIME NULL AFTER revisado;`).
 
-Todas las fechas se guardan y muestran en **hora Argentina (UTC-3)**: la conexión PDO aplica `SET time_zone = '-03:00'` y la helper `fmt_fecha()` las formatea en las vistas. El panel del alumno incluye un **semáforo de convivencia** (verde sin informes → ámbar/naranja → rojo a partir de 5 informes).
+Todas las fechas se guardan y muestran en **hora Argentina (UTC-3)**. La conexión PDO aplica `SET time_zone = '-03:00'`, PHP fija `date_default_timezone_set('America/Argentina/Buenos_Aires')` y las helpers de `includes/functions.php` centralizan el criterio:
+
+- `tz_argentina()` devuelve el `DateTimeZone` de `America/Argentina/Buenos_Aires`.
+- `ahora_db()` entrega la fecha/hora actual lista para columnas `DATETIME` (reemplaza a `date('Y-m-d H:i:s')` en crear, consejos, descargo, clasificación, resolución, detalle y auth).
+- `fmt_fecha()` formatea los valores de MySQL en las vistas sin depender de la configuración horaria del hosting.
+
+En instalaciones existentes se aplicaron dos parches idempotentes (registrados en la tabla `migraciones`): `tz_fix_columnas_php_20261123` y `tz_fix_actualizado_en_20261123`, que ajustaron las columnas escritas por PHP y `informes.actualizado_en`. El panel del alumno incluye un **semáforo de convivencia** (verde sin informes → ámbar/naranja → rojo a partir de 5 informes).
 
 El pasaje de `PENDIENTE_REVISION` → `EN_REVISION` → `PENDIENTE_DESCARGO` se realiza desde **`informes/revision.php`** (PRECEPTOR, DIRECTIVO o ADMIN). Los archivos de prueba se adjuntan desde **`informes/adjuntos.php`**: se validan por MIME real con `finfo`, tamaño máximo de 5 MB y formatos PDF/JPG/PNG/WEBP; la descarga se resuelve siempre desde la base de datos (`descargar_adjunto.php`), nunca desde un nombre de archivo arbitrario.
 
@@ -234,7 +241,11 @@ El pasaje de `PENDIENTE_REVISION` → `EN_REVISION` → `PENDIENTE_DESCARGO` se 
 
 ### PDF
 
-En el detalle de un informe (`informes/detalle.php?id=INF-0001`) presioná **Descargar PDF**: se genera el acta completa desde `informes/generar_pdf.php?id=INF-0001`, con el mismo formato de 9 secciones del modelo `Informe_de_Convivencia.docx` y el escudo de la escuela arriba de todo. El generador (`config/pdf.php`) incrusta el PNG del escudo sin depender de Composer.
+En el detalle de un informe (`informes/detalle.php?id=INF-0001`) presioná **Descargar PDF**: se genera el acta completa desde `informes/generar_pdf.php?id=INF-0001`, con el formato de 9 secciones del modelo `Informe_de_Convivencia.docx`. El generador (`config/pdf.php`) incrusta el PNG del escudo sin depender de Composer y soporta colores, grosores de línea y anchos reales de Helvetica.
+
+El acta en PDF fue **rediseñada por completo**: encabezado institucional con franja roja y escudo pequeño (34 pt), título centrado, banda de datos del alumno, secciones con barras rojas, recuadros grises con filete rojo y pie con numeración. Cabe en **una sola hoja A4**. El apartado **9. Notificación** contiene únicamente dos casilleros vacíos de **Firma / Fecha** para el alumno y el padre/madre/tutor: no se imprimen nombres ni fechas completas.
+
+Los enlaces al PDF usan `pdf_url()`, que agrega `?v=` con el `filemtime` del generador y del informe; así el navegador no sirve una versión vieja. Las hojas de estilo usan `asset_url()` con el mismo mecanismo.
 
 ### CSV de estadísticas
 
@@ -294,7 +305,7 @@ Este proyecto es **PHP + MySQL** y necesita un servidor con esos componentes. **
 |---|---|
 | **"Error de base de datos"** al abrir cualquier página | MySQL no está iniciado (XAMPP Control Panel → Start en MySQL), la base `colegio` no existe o los credenciales en `config/database.php` son incorrectos. Verificá también que el puerto 3306 no esté ocupado por otro servicio. |
 | **Página en blanco** | Error fatal de PHP oculto. Revisá `C:\xampp\php\logs\php_error_log` (o `error_log` del hosting). Para diagnosticar, activá temporalmente `display_errors = On` en `php.ini` y reiniciá Apache. También verificá que la carpeta `storage/` sea escribible. |
-| **CSS / imágenes con 404** | La carpeta debe estar en `C:\xampp\htdocs\colegio` y `BASE_URL` debe ser `/colegio/`. Comprobá que existan `assets/css/styles.css` y `assets/img/escudo.png`. Limpiá la caché del navegador (Ctrl + F5). |
+| **CSS / imágenes con 404 o cambios que no se ven** | La carpeta debe estar en `C:\xampp\htdocs\colegio` y `BASE_URL` debe ser `/colegio/`. Comprobá que existan `assets/css/styles.css` y `assets/img/escudo.png`. Los enlaces ya incluyen `?v=` con la versión del archivo (`asset_url()` / `pdf_url()`); si igual ves la versión anterior, forzá recarga con Ctrl + F5. |
 | **No llega el correo con las credenciales** | No hace falta: al crear o reenviar, los datos se muestran en pantalla. El correo es opcional; con `mail_mode = log` se guarda en `storage/mail.log` y con `smtp` revisá usuario, clave y puerto 587/465. |
 | **"Token de seguridad inválido"** | La sesión expiró o el formulario se abrió en otra pestaña. Recargá la página y volvé a enviar. |
 | **No puedo iniciar sesión con un usuario nuevo** | Buscá el usuario y la contraseña en el recuadro que apareció al crear la cuenta (o en `storage/mail.log`). Si la contraseña fue cambiada antes, usá la nueva. Si no tenés las credenciales, desde `admin/usuarios.php` usá **Reenviar credenciales**: se genera una nueva y se muestra en pantalla. |

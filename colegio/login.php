@@ -14,7 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Iniciar sesión · ET35</title>
-<link rel="stylesheet" href="<?= e(url('assets/css/styles.css')) ?>">
+<link rel="stylesheet" href="<?= e(asset_url('css/styles.css')) ?>">
 </head>
 <body class="login-wrap">
 <div class="login-box">
