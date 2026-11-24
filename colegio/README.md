@@ -112,7 +112,7 @@ colegio/
 │   ├── app.php          Arranque: sesión, BASE_URL, APP_URL, zona horaria, includes.
 │   ├── database.php     Conexión PDO a MySQL (usuario/contraseña).
 │   ├── mail.php         Envío de correos: modo log o SMTP.
-│   └── pdf.php          Generador de PDF liviano propio (A4, Helvetica y Times, sin Composer).
+│   └── pdf.php          Generador PDF mínimo propio (A4, Times-Roman/Bold, sin Composer).
 ├── includes/
 │   ├── functions.php    Helper globales: e(), url(), asset_url(), pdf_url(), csrf, flash(),
 │   │                    notify(), audit(), estados, tz_argentina(), ahora_db(), fmt_fecha()...
@@ -241,7 +241,7 @@ El pasaje de `PENDIENTE_REVISION` → `EN_REVISION` → `PENDIENTE_DESCARGO` se 
 
 ### PDF
 
-En el detalle de un informe (`informes/detalle.php?id=INF-0001`) presioná **Descargar PDF**: se genera el acta completa desde `informes/generar_pdf.php?id=INF-0001`, con el formato de 9 secciones del modelo `Informe_de_Convivencia.docx`. El generador (`config/pdf.php`) incrusta el PNG del escudo sin depender de Composer, soporta colores, grosores de línea y anchos reales de Helvetica y Times-Roman/Times-Bold.
+En el detalle de un informe (`informes/detalle.php?id=INF-0001`) presioná **Descargar PDF**: se genera el acta completa desde `informes/generar_pdf.php?id=INF-0001`, con el formato de 9 secciones del modelo `Informe_de_Convivencia.docx`. El generador es intencionalmente simple (`config/pdf.php`): una sola hoja A4, tipografía Times-Roman/Times-Bold, líneas y recuadros, e incrusta el PNG del escudo sin depender de Composer. El acta se dibuja de forma lineal, con posiciones explícitas, para evitar superposiciones.
 
 El PDF **reproduce el acta de la vista web** (misma estructura de 9 apartados, tipografía Times, títulos rojos, recuadros grises con filete rojo y escudo chico centrado arriba), para que lo que se ve en pantalla coincida con lo que se descarga. Cabe en **una sola hoja A4**. El apartado **9. Notificación** contiene únicamente dos casilleros vacíos con encabezados **Alumno / Fecha** y **Padre/Madre/Tutor / Fecha**: no se imprimen nombres ni fechas completas.
 
