@@ -7,7 +7,7 @@
 class PDF {
     private array $pages = [];
     private array $images = [];
-    private array $fonts = ['N' => 3, 'B' => 4];
+    private array $fonts = ['N' => 3, 'B' => 4, 'T' => 5, 'TB' => 6];
     private string $font = 'N';
     private float $size = 11;
     private array $stroke = [0, 0, 0];
@@ -87,18 +87,19 @@ class PDF {
         $this->text($center - $this->width($s) / 2, $y, $s);
     }
 
-    /** Anchos Helvetica en milésimas (ASCII 32..126), normal y negrita. */
+    /** Anchos en milésimas (ASCII 32..126) para las cuatro tipografías embebidas. */
     private static function metrics(string $font): array {
         static $cache = [];
         if (isset($cache[$font])) return $cache[$font];
-        $w = $font === 'B' ? [
+        $helvB = [
             278,333,474,556,556,889,722,238,333,333,389,584,278,333,278,278,
             556,556,556,556,556,556,556,556,556,556,333,333,584,584,584,611,
             975,722,722,722,722,667,611,778,722,278,556,722,611,833,722,778,667,
             778,722,667,611,722,667,944,667,667,611,333,278,333,584,556,333,
             556,611,556,611,556,333,611,611,278,278,556,278,889,611,611,611,
             611,389,556,333,611,556,778,556,556,500,389,280,389,584
-        ] : [
+        ];
+        $helv = [
             278,278,355,556,556,889,667,191,333,333,389,584,278,333,278,278,
             556,556,556,556,556,556,556,556,556,556,278,278,584,584,584,556,
             1015,667,667,722,722,667,611,778,722,278,500,667,556,833,722,778,667,
@@ -106,6 +107,28 @@ class PDF {
             556,556,500,556,556,278,556,556,222,222,500,222,833,556,556,556,
             556,333,500,278,556,500,722,500,500,500,334,260,334,584
         ];
+        $timesB = [
+            250,333,555,500,500,1000,833,278,333,333,500,570,250,333,250,278,
+            500,500,500,500,500,500,500,500,500,500,333,333,570,570,570,500,
+            930,722,667,722,722,667,611,778,722,278,500,667,556,833,722,778,
+            667,778,722,667,611,722,667,944,667,667,611,333,278,333,581,500,
+            333,500,556,444,556,444,333,500,556,278,278,500,278,833,556,500,
+            556,556,444,389,333,556,500,722,500,500,444,394,220,394,520
+        ];
+        $times = [
+            250,333,408,500,500,833,778,180,333,333,500,564,250,333,250,278,
+            500,500,500,500,500,500,500,500,500,500,278,278,564,564,564,444,
+            921,722,667,667,722,611,556,722,722,333,389,722,611,889,722,722,
+            556,722,667,556,611,722,722,944,722,722,611,333,278,333,469,500,333,
+            444,500,444,500,444,333,500,500,278,278,500,278,778,500,500,500,
+            500,333,389,278,500,500,722,500,500,444,480,200,480,541
+        ];
+        $w = match ($font) {
+            'B' => $helvB,
+            'T' => $times,
+            'TB' => $timesB,
+            default => $helv,
+        };
         $m = [];
         foreach ($w as $i => $v) $m[32 + $i] = $v / 1000;
         return $cache[$font] = $m;
@@ -248,16 +271,18 @@ class PDF {
         $objs[1] = "<< /Type /Catalog /Pages 2 0 R >>";
         $kids = [];
         $n = count($this->pages);
-        for ($i = 1; $i <= $n; $i++) $kids[] = (4 + $i) . " 0 R";
-        // 2 = Pages, 3 = Helvetica, 4 = Helvetica-Bold, 5..(4+n) = páginas,
-        // (5+n).. = contenidos, (5+2n).. = imágenes y máscaras de transparencia.
+        for ($i = 1; $i <= $n; $i++) $kids[] = (6 + $i) . " 0 R";
+        // 2 = Pages, 3..6 = Helvetica, Helvetica-Bold, Times-Roman y Times-Bold,
+        // 7..(6+n) = páginas, (7+n).. = contenidos, (7+2n).. = imágenes y máscaras.
         $objs[2] = "<< /Type /Pages /Kids [" . implode(' ', $kids) . "] /Count {$n} >>";
         $objs[3] = "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>";
         $objs[4] = "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>";
+        $objs[5] = "<< /Type /Font /Subtype /Type1 /BaseFont /Times-Roman /Encoding /WinAnsiEncoding >>";
+        $objs[6] = "<< /Type /Font /Subtype /Type1 /BaseFont /Times-Bold /Encoding /WinAnsiEncoding >>";
 
-        $pageObj = 5;
-        $contentObj = 5 + $n;
-        $imageObj = 5 + 2 * $n;
+        $pageObj = 7;
+        $contentObj = 7 + $n;
+        $imageObj = 7 + 2 * $n;
         $maskObj = $imageObj + count($this->images);
 
         $xobjects = [];
@@ -280,7 +305,7 @@ class PDF {
         for ($i = 0; $i < $n; $i++) {
             $stream = $this->pages[$i];
             $objs[$contentObj + $i] = "<< /Length " . strlen($stream) . " >>\nstream\n{$stream}endstream";
-            $recursos = '/Font << /F1 3 0 R /F2 4 0 R >>';
+            $recursos = '/Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R /F4 6 0 R >>';
             if ($xobjects) $recursos .= ' /XObject << ' . implode(' ', $xobjects) . ' >>';
             $objs[$pageObj + $i] = "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 " . self::W . " " . self::H . "] "
                 . "/Resources << {$recursos} >> /Contents " . ($contentObj + $i) . " 0 R >>";
