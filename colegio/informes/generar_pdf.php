@@ -100,41 +100,34 @@ function pd(PDF $p, float $y, float $x, float $ancho): void {
     if ($cant > 0) $p->text($x, $y, str_repeat('· ', $cant));
 }
 
-/** Escribe el valor sobre la línea de puntos, tapando los puntos que ocupa. */
-function pv(PDF $p, float $y, float $x, string $valor, float $ancho): void {
-    $valor = trim($valor);
-    if ($valor === '') return;
-    $p->setFont('T', 9);
-    if ($p->width($valor) > $ancho - 4) {
-        while ($valor !== '' && $p->width($valor . '…') > $ancho - 4) $valor = mb_substr($valor, 0, -1);
-        $valor .= '…';
-    }
-    $w = $p->width($valor);
-    $p->fill(1, 1, 1);
-    $p->filledRect($x - 1, $y - 7, $w + 3, 10);
-    $p->fill(...PDF_TEXTO);
-    $p->text($x, $y, $valor);
-}
-
-/** Campo: etiqueta + línea de puntos de ancho fijo + valor escrito encima. */
+/** Campo: etiqueta + valor. Si está vacío, puntos guía en lugar del dato. */
 function pc(PDF $p, float $y, float $x, string $etiqueta, string $valor, float $ancho): void {
     $p->fill(...PDF_TEXTO);
     $p->setFont('T', 9);
     $p->text($x, $y, $etiqueta);
     $fx = $x + $p->width($etiqueta) + 4;
     $fw = max(8, $x + $ancho - $fx);
-    pd($p, $y, $fx, $fw);
-    pv($p, $y, $fx, $valor, $fw);
+    $valor = trim($valor);
+    if ($valor === '') {
+        pd($p, $y, $fx, $fw);
+        return;
+    }
+    if ($p->width($valor) > $fw - 4) {
+        while ($valor !== '' && $p->width($valor . '…') > $fw - 4) $valor = mb_substr($valor, 0, -1);
+        $valor .= '…';
+    }
+    $p->text($fx, $y, $valor);
 }
 
-/** Área de texto: renglones punteados, con el dato escrito sobre los puntos. */
+/** Área de texto: el dato sin puntos; si no hay dato, renglones punteados. */
 function pl(PDF $p, float $y, string $texto, int $lineas = 4, float $inter = 16): float {
     $p->setFont('T', 9);
     $lineasTexto = $texto === '' ? [] : array_slice($p->wrap($texto, 480), 0, $lineas);
-    for ($i = 0; $i < $lineas; $i++) {
-        $ry = $y + $i * $inter;
-        pd($p, $ry, 42, 511.28);
-        pv($p, $ry, 42, $lineasTexto[$i] ?? '', 511.28);
+    if ($lineasTexto) {
+        $p->fill(...PDF_TEXTO);
+        foreach ($lineasTexto as $i => $linea) $p->text(42, $y + $i * $inter, $linea);
+    } else {
+        for ($i = 0; $i < $lineas; $i++) pd($p, $y + $i * $inter, 42, 511.28);
     }
     return $y + $lineas * $inter;
 }
