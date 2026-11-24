@@ -66,9 +66,6 @@ $datos = function (string $sql) use ($pdo, $informeId): ?array {
     $st->execute([$informeId]);
     return $st->fetch() ?: null;
 };
-$descargo = $datos('SELECT * FROM descargos WHERE informe_id=?');
-$ca = $datos('SELECT ca.*, us.nombre, us.apellido FROM consejo_aula ca JOIN usuarios us ON us.id=ca.responsable_id WHERE ca.informe_id=?');
-$cc = $datos('SELECT cc.*, us.nombre, us.apellido FROM consejo_convivencia cc JOIN usuarios us ON us.id=cc.responsable_id WHERE cc.informe_id=?');
 $clas = $datos('SELECT cl.*, us.nombre, us.apellido FROM clasificaciones cl JOIN usuarios us ON us.id=cl.responsable_id WHERE cl.informe_id=?');
 
 $alumno  = trim($inf['alumno_nombre'] . ' ' . $inf['alumno_apellido']);
@@ -193,27 +190,12 @@ pc($pdf, $y, 326, 'Fecha: ', fmt_fecha($inf['fecha_incidente'], false), 82);
 pc($pdf, $y, 412, 'Firma: ', (string)($inf['firma_digital'] ?? ''), 141.28);
 $y += 20;
 
-// 4.- Descargo.
-$y = pt($pdf, $y, '4', 'Descargo del Alumno/a:');
-$y = pl($pdf, $y, (string)($descargo['descripcion'] ?? ''), 3);
-$y += 6;
-
-// 5.- Consejo de Aula.
-$y = pt($pdf, $y, '5', 'Informe de Consejo de Aula');
-$y = pl($pdf, $y, (string)($ca['observaciones'] ?? ''), 2);
-$y += 6;
-
-// 6.- Consejo de Convivencia.
-$y = pt($pdf, $y, '6', 'Informe de Consejo de Convivencia');
-$y = pl($pdf, $y, (string)($cc['observaciones'] ?? ''), 2);
-$y += 6;
-
-// 7.- Observaciones.
-$y = pt($pdf, $y, '7', 'Observaciones');
+// 4.- Observaciones.
+$y = pt($pdf, $y, '4', 'Observaciones');
 $y = pl($pdf, $y, '', 2);
 
-// 8.- Corresponde.
-$y = pt($pdf, $y, '8', 'Se considera que corresponde: (Indicar a continuación)');
+// 5.- Corresponde.
+$y = pt($pdf, $y, '5', 'Se considera que corresponde: (Indicar a continuación)');
 pcheck($pdf, $y, 42, '1ª Instancia  LEVE', $instancia === 'LEVE');
 pcheck($pdf, $y + 17, 42, '2ª Instancia  GRAVE', $instancia === 'GRAVE');
 pcheck($pdf, $y + 34, 42, '3ª Instancia  MUY GRAVE', $instancia === 'MUY_GRAVE');
@@ -224,8 +206,8 @@ pc($pdf, $y, 42, 'Firma Directivo: ', $directivo, 300);
 pc($pdf, $y, 352, 'Fecha: ', !empty($clas['fecha']) ? fmt_fecha($clas['fecha'], false) : '', 201.28);
 $y += 22;
 
-// 9.- Notificación: sólo los espacios para firma y fecha.
-$y = pt($pdf, $y, '9', 'Notificación:');
+// 6.- Notificación: sólo los espacios para firma y fecha.
+$y = pt($pdf, $y, '6', 'Notificación:');
 pc($pdf, $y, 42, 'Alumno: ', '', 300); $y += 18;
 pc($pdf, $y, 42, 'Fecha: ', '', 200); $y += 18;
 pc($pdf, $y, 42, 'Padre/Madre/Tutor: ', '', 320); $y += 18;
