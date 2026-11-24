@@ -137,24 +137,24 @@ $titulo = function (string $nro, string $texto) use ($pdf, &$y, $izq, $ROJO, $TE
 };
 
 /** Etiqueta + valor subrayado, como .acta-linea. */
-$linea = function (string $etiqueta, ?string $valor, float $x, float $w, int $max = 44)
-    use ($pdf, $y, $cortar, $BORDE, $TEXTO): void {
+$linea = function (float $fila, string $etiqueta, ?string $valor, float $x, float $w, int $max = 44)
+    use ($pdf, $cortar, $BORDE, $TEXTO): void {
     $pdf->setFont('T', 8.8);
     $pdf->setText(...$TEXTO);
     $rot = $etiqueta . ': ';
-    $pdf->text($x, $y, $rot);
+    $pdf->text($x, $fila, $rot);
     $px = $x + $pdf->width($rot);
     $v = $cortar($valor, $max);
-    $pdf->text($px, $y, $v);
+    $pdf->text($px, $fila, $v);
     $pdf->setStroke(...$BORDE);
     $pdf->setLineWidth(0.4);
-    $pdf->line($px, $y + 1.6, min($px + $pdf->width($v) + 3, $x + $w), $y + 1.6);
+    $pdf->line($px, $fila + 1.6, min($px + $pdf->width($v) + 3, $x + $w), $fila + 1.6);
 };
 
 /** Dos campos por fila. */
 $campos2 = function (array $a, array $b) use ($linea, &$y): void {
-    $linea($a[0], $a[1] ?? '', 42, 248, $a[2] ?? 38);
-    $linea($b[0], $b[1] ?? '', 305, 248, $b[2] ?? 38);
+    $linea($y, $a[0], $a[1] ?? '', 42, 248, $a[2] ?? 38);
+    $linea($y, $b[0], $b[1] ?? '', 305, 248, $b[2] ?? 38);
     $y += 12;
 };
 
@@ -192,14 +192,14 @@ $nota = function (string $texto) use ($pdf, &$y, $izq, $GRIS_TEXTO): void {
 $titulo('1', 'El alumno/a');
 $campos2(['Apellido y nombre', $alumnoNombre, 40], ['Curso', $inf['curso'], 28]);
 $campos2(['División', $inf['division'], 28], ['Legajo', $inf['legajo'], 28]);
-$linea('DNI', $inf['alumno_dni'], 42, 248, 28);
-$linea('Fecha del incidente', fmt_fecha($inf['fecha_incidente']), 305, 248, 26);
+$linea($y, 'DNI', $inf['alumno_dni'], 42, 248, 28);
+$linea($y, 'Fecha del incidente', fmt_fecha($inf['fecha_incidente']), 305, 248, 26);
 $y += 16;
 
 // ---------- 2 ----------
 $titulo('2', 'Ha realizado la acción que se describe a continuación:');
 $cuadro($inf['descripcion'], 3);
-$linea('Normas transgredidas', $inf['normas'], 42, 511.28, 92);
+$linea($y, 'Normas transgredidas', $inf['normas'], 42, 511.28, 92);
 $y += 12;
 $nota('transgrediendo Normas del Reglamento de Convivencia de la escuela.');
 
@@ -207,7 +207,7 @@ $nota('transgrediendo Normas del Reglamento de Convivencia de la escuela.');
 $titulo('3', 'Solicitud de sanción:');
 $campos2(['Docente', $docenteNombre, 36], ['Cargo/función', $inf['cargo'], 30]);
 $campos2(['Fecha', fmt_fecha($inf['fecha_incidente'], false), 22], ['Firma', $inf['firma_digital'], 28]);
-$linea('Categoría solicitada', $inf['solicitud_sancion'], 42, 511.28, 90);
+$linea($y, 'Categoría solicitada', $inf['solicitud_sancion'], 42, 511.28, 90);
 $y += 16;
 
 // ---------- 4 ----------
@@ -215,7 +215,7 @@ $titulo('4', 'Descargo del Alumno/a:');
 $cuadro($descargo['descripcion'] ?? 'Sin registrar', 3);
 if ($descargo) {
     $campos2(['Observaciones', $descargo['observaciones'] ?? '', 28], ['Identificación', $alumnoNombre . ' · ' . $inf['legajo'], 28]);
-    $linea('Fecha de presentación', fmt_fecha($descargo['fecha_presentacion']), 42, 511.28, 40);
+    $linea($y, 'Fecha de presentación', fmt_fecha($descargo['fecha_presentacion']), 42, 511.28, 40);
     $y += 12;
 }
 
@@ -233,7 +233,7 @@ $cuadro($cc['observaciones'] ?? 'Sin registrar', 2);
 if ($cc) {
     $campos2(['Análisis', $cc['analisis'] ?? '', 26], ['Recomendaciones', $cc['recomendaciones'] ?? '', 26]);
     $campos2(['Intervención', $cc['intervencion'] ?? '', 26], ['Responsable', trim($cc['apellido'] . ', ' . $cc['nombre']), 28]);
-    $linea('Fecha intervención', fmt_fecha($cc['fecha_intervencion']), 42, 511.28, 36);
+    $linea($y, 'Fecha intervención', fmt_fecha($cc['fecha_intervencion']), 42, 511.28, 36);
     $y += 12;
 }
 
@@ -259,27 +259,27 @@ foreach ([[42, '1ª Instancia LEVE', 'LEVE'], [212, '2ª Instancia GRAVE', 'GRAV
     $pdf->text($x + 13, $y + 8, $txt);
 }
 $y += 15;
-$linea('Otra consideración', $clas['otra_consideracion'] ?? '', 42, 511.28, 88);
+$linea($y, 'Otra consideración', $clas['otra_consideracion'] ?? '', 42, 511.28, 88);
 $y += 16;
 
 // ---------- 9 ----------
 $titulo('9', 'Notificación:');
-$tabla = function (float $x, float $w, string $tituloCol) use ($pdf, $y, $ROJO_CLARO, $BORDE, $ROJO): void {
+$tabla = function (float $fila, float $x, float $w, string $tituloCol) use ($pdf, $ROJO_CLARO, $BORDE, $ROJO): void {
     $pdf->setFill(...$ROJO_CLARO);
-    $pdf->filledRect($x, $y, $w, 13);
+    $pdf->filledRect($x, $fila, $w, 13);
     $pdf->setStroke(...$BORDE);
     $pdf->setLineWidth(0.4);
-    $pdf->rect($x, $y, $w, 13);
-    $pdf->line($x + $w - 80, $y, $x + $w - 80, $y + 13);
+    $pdf->rect($x, $fila, $w, 13);
+    $pdf->line($x + $w - 80, $fila, $x + $w - 80, $fila + 13);
     $pdf->setFont('TB', 8);
     $pdf->setText(...$ROJO);
-    $pdf->text($x + 5, $y + 9, $tituloCol);
-    $pdf->text($x + $w - 74, $y + 9, 'Fecha');
-    $pdf->rect($x, $y + 13, $w, 17);
-    $pdf->line($x + $w - 80, $y + 13, $x + $w - 80, $y + 30);
+    $pdf->text($x + 5, $fila + 9, $tituloCol);
+    $pdf->text($x + $w - 74, $fila + 9, 'Fecha');
+    $pdf->rect($x, $fila + 13, $w, 17);
+    $pdf->line($x + $w - 80, $fila + 13, $x + $w - 80, $fila + 30);
 };
-$tabla(42, 248, 'Alumno');
-$tabla(305, 248.28, 'Padre/Madre/Tutor');
+$tabla($y, 42, 248, 'Alumno');
+$tabla($y, 305, 248.28, 'Padre/Madre/Tutor');
 $y += 33;
 
 // ---------- Pie ----------
