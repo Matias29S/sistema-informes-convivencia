@@ -91,28 +91,50 @@ function pt(PDF $p, float $y, string $nro, string $titulo): float {
     return $y + 18;
 }
 
-/** Texto + puntos guía hasta completar el ancho. */
-function pd(PDF $p, float $y, float $x, string $texto, float $ancho, bool $negrita = false): void {
-    $p->fill(...PDF_TEXTO);
-    $p->setFont($negrita ? 'B' : 'T', 9);
-    $txt = trim($texto);
-    if ($txt !== '' && $p->width($txt) > $ancho - 14) {
-        while ($txt !== '' && $p->width($txt . '…') > $ancho - 14) $txt = mb_substr($txt, 0, -1);
-        $txt .= '…';
-    }
-    if ($txt !== '') $p->text($x, $y, $txt);
-    $cursor = $x + ($txt === '' ? 0 : $p->width($txt) + 5);
+/** Línea de puntos: marca el lugar que se completa con el dato. */
+function pd(PDF $p, float $y, float $x, float $ancho): void {
+    $p->fill(...PDF_GRIS);
     $p->setFont('T', 8.5);
     $paso = $p->width('· ');
-    $cant = max(0, (int)floor(($x + $ancho - $cursor) / $paso));
-    if ($cant > 0) $p->text($cursor, $y, str_repeat('· ', $cant));
+    $cant = max(0, (int)floor($ancho / $paso));
+    if ($cant > 0) $p->text($x, $y, str_repeat('· ', $cant));
 }
 
-/** Área de texto: hasta $lineas renglones punteados, con el valor escrito arriba. */
+/** Escribe el valor sobre la línea de puntos, tapando los puntos que ocupa. */
+function pv(PDF $p, float $y, float $x, string $valor, float $ancho): void {
+    $valor = trim($valor);
+    if ($valor === '') return;
+    $p->setFont('T', 9);
+    if ($p->width($valor) > $ancho - 4) {
+        while ($valor !== '' && $p->width($valor . '…') > $ancho - 4) $valor = mb_substr($valor, 0, -1);
+        $valor .= '…';
+    }
+    $w = $p->width($valor);
+    $p->fill(1, 1, 1);
+    $p->filledRect($x - 1, $y - 7, $w + 3, 10);
+    $p->fill(...PDF_TEXTO);
+    $p->text($x, $y, $valor);
+}
+
+/** Campo: etiqueta + línea de puntos de ancho fijo + valor escrito encima. */
+function pc(PDF $p, float $y, float $x, string $etiqueta, string $valor, float $ancho): void {
+    $p->fill(...PDF_TEXTO);
+    $p->setFont('T', 9);
+    $p->text($x, $y, $etiqueta);
+    $fx = $x + $p->width($etiqueta) + 4;
+    $fw = max(8, $x + $ancho - $fx);
+    pd($p, $y, $fx, $fw);
+    pv($p, $y, $fx, $valor, $fw);
+}
+
+/** Área de texto: renglones punteados, con el dato escrito sobre los puntos. */
 function pl(PDF $p, float $y, string $texto, int $lineas = 4, float $inter = 16): float {
+    $p->setFont('T', 9);
     $lineasTexto = $texto === '' ? [] : array_slice($p->wrap($texto, 480), 0, $lineas);
     for ($i = 0; $i < $lineas; $i++) {
-        pd($p, $y + $i * $inter, 42, $lineasTexto[$i] ?? '', 511.28);
+        $ry = $y + $i * $inter;
+        pd($p, $ry, 42, 511.28);
+        pv($p, $ry, 42, $lineasTexto[$i] ?? '', 511.28);
     }
     return $y + $lineas * $inter;
 }
@@ -157,23 +179,25 @@ $y = 124.0;
 
 // 1.- El alumno/a.
 $y = pt($pdf, $y, '1', 'El alumno/a:');
-pd($pdf, $y, 42, $alumno, 244);
-pd($pdf, $y, 296, 'de ' . $inf['curso'] . ' año,', 96);
-pd($pdf, $y, 402, 'División ' . $inf['division'], 151.28);
+pc($pdf, $y, 42, '', $alumno, 244);
+pc($pdf, $y, 296, 'de ', ($inf['curso'] ?? '') . ' año,', 96);
+pc($pdf, $y, 402, 'División ', (string)($inf['division'] ?? ''), 151.28);
 $y += 18;
 
 // 2.- Acción.
 $y = pt($pdf, $y, '2', 'Ha realizado la acción que se describe a continuación:');
 $y = pl($pdf, $y, (string)($inf['descripcion'] ?? ''), 4);
-pd($pdf, $y, 42, 'transgrediendo Normas del Reglamento de Convivencia de la escuela.', 511.28);
+$pdf->fill(...PDF_TEXTO);
+$pdf->setFont('T', 9);
+$pdf->text(42, $y, 'transgrediendo Normas del Reglamento de Convivencia de la escuela.');
 $y += 20;
 
 // 3.- Solicitud de sanción.
 $y = pt($pdf, $y, '3', 'Solicitud de sanción:');
-pd($pdf, $y, 42, 'Docente: ' . $docente, 138);
-pd($pdf, $y, 182, 'Cargo/función: ' . ($inf['cargo'] ?? ''), 140);
-pd($pdf, $y, 326, 'Fecha: ' . fmt_fecha($inf['fecha_incidente'], false), 82);
-pd($pdf, $y, 412, 'Firma: ' . ($inf['firma_digital'] ?? ''), 141.28);
+pc($pdf, $y, 42, 'Docente: ', $docente, 138);
+pc($pdf, $y, 182, 'Cargo/función: ', (string)($inf['cargo'] ?? ''), 140);
+pc($pdf, $y, 326, 'Fecha: ', fmt_fecha($inf['fecha_incidente'], false), 82);
+pc($pdf, $y, 412, 'Firma: ', (string)($inf['firma_digital'] ?? ''), 141.28);
 $y += 20;
 
 // 4.- Descargo.
@@ -201,19 +225,18 @@ pcheck($pdf, $y, 42, '1ª Instancia  LEVE', $instancia === 'LEVE');
 pcheck($pdf, $y + 17, 42, '2ª Instancia  GRAVE', $instancia === 'GRAVE');
 pcheck($pdf, $y + 34, 42, '3ª Instancia  MUY GRAVE', $instancia === 'MUY_GRAVE');
 $y += 62;
-pd($pdf, $y, 42, 'Otra consideración: ' . ($clas['otra_consideracion'] ?? ''), 511.28);
+pc($pdf, $y, 42, 'Otra consideración: ', (string)($clas['otra_consideracion'] ?? ''), 511.28);
 $y += 20;
-pd($pdf, $y, 42, 'Firma Directivo: ' . $directivo, 300);
-$fechaDirectivo = !empty($clas['fecha']) ? 'Fecha: ' . fmt_fecha($clas['fecha'], false) : 'Fecha: ';
-pd($pdf, $y, 352, $fechaDirectivo, 201.28);
+pc($pdf, $y, 42, 'Firma Directivo: ', $directivo, 300);
+pc($pdf, $y, 352, 'Fecha: ', !empty($clas['fecha']) ? fmt_fecha($clas['fecha'], false) : '', 201.28);
 $y += 22;
 
 // 9.- Notificación: sólo los espacios para firma y fecha.
 $y = pt($pdf, $y, '9', 'Notificación:');
-pd($pdf, $y, 42, 'Alumno: ', 300); $y += 18;
-pd($pdf, $y, 42, 'Fecha: ', 200); $y += 18;
-pd($pdf, $y, 42, 'Padre/Madre/Tutor: ', 320); $y += 18;
-pd($pdf, $y, 42, 'Fecha: ', 200);
+pc($pdf, $y, 42, 'Alumno: ', '', 300); $y += 18;
+pc($pdf, $y, 42, 'Fecha: ', '', 200); $y += 18;
+pc($pdf, $y, 42, 'Padre/Madre/Tutor: ', '', 320); $y += 18;
+pc($pdf, $y, 42, 'Fecha: ', '', 200);
 
 // Pie.
 $pdf->stroke(...PDF_CLARO);
