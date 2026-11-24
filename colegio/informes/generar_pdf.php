@@ -71,6 +71,7 @@ $clas = $datos('SELECT cl.*, us.nombre, us.apellido FROM clasificaciones cl JOIN
 $alumno  = trim($inf['alumno_nombre'] . ' ' . $inf['alumno_apellido']);
 $docente = trim($inf['docente_apellido'] . ', ' . $inf['docente_nombre']);
 $instancia = $clas['instancia'] ?? '';
+if ($instancia === '') $instancia = instancia_de($inf['solicitud_sancion'] ?? '');
 $directivo = $clas ? trim($clas['apellido'] . ', ' . $clas['nombre']) : '';
 
 // ---------- Dibujo del formulario ----------
@@ -177,9 +178,6 @@ $y += 18;
 // 2.- Acción.
 $y = pt($pdf, $y, '2', 'Ha realizado la acción que se describe a continuación:');
 $y = pl($pdf, $y, (string)($inf['descripcion'] ?? ''), 4);
-$pdf->fill(...PDF_TEXTO);
-$pdf->setFont('T', 9);
-$pdf->text(42, $y, 'transgrediendo Normas del Reglamento de Convivencia de la escuela.');
 $y += 20;
 
 // 3.- Solicitud de sanción.

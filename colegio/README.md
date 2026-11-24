@@ -245,6 +245,8 @@ En el detalle de un informe (`informes/detalle.php?id=INF-0001`) presioná **Des
 
 El PDF **reproduce el acta de la vista web** (misma estructura de 6 apartados y escudo chico centrado arriba), para que lo que se ve en pantalla coincida con lo que se descarga. Cabe en **una sola hoja A4**. Los puntos guía aparecen **sólo en los campos sin texto**; el apartado **6. Notificación** queda siempre vacío (Alumno, Fecha, Padre/Madre/Tutor, Fecha), sin nombres ni fechas completas.
 
+La casilla de **1ª LEVE / 2ª GRAVE / 3ª MUY GRAVE** se marca igual en pantalla y en el PDF: se toma de la clasificación registrada y, si todavía no hay clasificación, de la categoría solicitada al crear el informe (`solicitud_sancion`).
+
 La página de detalle muestra el acta en dos columnas: la vista previa a la izquierda y, a la derecha, los datos del informe, las acciones, el resumen del trámite y las observaciones del historial. Un informe **ANULADO** sigue consultable (vista previa, PDF, adjuntos e historial), pero se ocultan las acciones de tramitación (revisión, descargo, consejos, clasificación, resolución y anular) y se muestra un aviso.
 
 Los enlaces al PDF usan `pdf_url()`, que agrega `?v=` con el `filemtime` del generador y del informe; así el navegador no sirve una versión vieja. Las hojas de estilo usan `asset_url()` con el mismo mecanismo.

@@ -252,6 +252,17 @@ const ESTADOS_INFORME = [
 
 function estado_nombre(string $k): string { return ESTADOS_INFORME[$k] ?? $k; }
 
+/** Normaliza la categoría solicitada (ej. "3ª MUY GRAVE") a LEVE / GRAVE / MUY_GRAVE. */
+function instancia_de($valor): string {
+    $s = mb_strtoupper(trim((string)($valor ?? '')));
+    $s = str_replace(['ª', 'º', '.', '-', '_'], ' ', $s);
+    $s = preg_replace('/\s+/u', ' ', $s) ?? '';
+    if (strpos($s, 'MUY GRAVE') !== false) return 'MUY_GRAVE';
+    if (strpos($s, 'GRAVE') !== false) return 'GRAVE';
+    if (strpos($s, 'LEVE') !== false) return 'LEVE';
+    return '';
+}
+
 function cambiar_estado(int $informeId, string $estado, ?string $obs = null): void {
     global $pdo;
     $pdo->prepare('UPDATE informes SET estado=? WHERE id=?')->execute([$estado, $informeId]);

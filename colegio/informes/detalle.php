@@ -176,6 +176,8 @@ $puedeDescargo = !$anulado && $rol === 'ALUMNO' && $miAlumnoId > 0 && (int)$inf[
                  && $inf['estado'] === 'PENDIENTE_DESCARGO' && !$descargo;
 
 $instancia = $clasificacion['instancia'] ?? '';
+if ($instancia === '') $instancia = instancia_de($inf['solicitud_sancion'] ?? '');
+$nombresInstancia = ['LEVE' => '1ª LEVE', 'GRAVE' => '2ª GRAVE', 'MUY_GRAVE' => '3ª MUY GRAVE', 'OTRA' => 'Otra consideración'];
 $cursoTexto = trim($inf['curso'] . ' ' . ($inf['especialidad'] ? $inf['especialidad'] . ' ' : '') . $inf['division']);
 
 layout_header('Informe ' . $inf['codigo']);
@@ -214,7 +216,7 @@ layout_header('Informe ' . $inf['codigo']);
       <?= linea_punteada() ?>
       <?= linea_punteada() ?>
       <?= linea_punteada() ?>
-      transgrediendo Normas del Reglamento de Convivencia de la escuela.
+      <?= linea_punteada() ?>
     </div></div>
 
     <div class="acta-sec"><div class="num">3.-</div><div>
@@ -310,7 +312,7 @@ layout_header('Informe ' . $inf['codigo']);
     <p><strong>Descargo:</strong> <?= $descargo ? 'Presentado el ' . e($descargo['fecha_presentacion']) : 'Pendiente / sin registrar' ?></p>
     <p><strong>Consejo de Aula:</strong> <?= $consejoAula ? 'Registrado el ' . e($consejoAula['fecha_intervencion']) : 'Sin registrar' ?></p>
     <p><strong>Consejo de Convivencia:</strong> <?= $consejoConv ? 'Registrado el ' . e($consejoConv['fecha_intervencion']) : 'Sin registrar' ?></p>
-    <p><strong>Clasificación:</strong> <?= $clasificacion ? e($instancia === 'OTRA' ? 'Otra consideración' : $instancia) : 'Sin registrar' ?></p>
+    <p><strong>Clasificación:</strong> <?= $instancia !== '' ? e($nombresInstancia[$instancia] ?? $instancia) : 'Sin registrar' ?></p>
     <p><strong>Resolución:</strong> <?= $resolucion ? 'Registrada el ' . e($resolucion['fecha']) : 'Sin registrar' ?></p>
   </div>
 
