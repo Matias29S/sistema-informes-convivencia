@@ -241,9 +241,11 @@ El pasaje de `PENDIENTE_REVISION` → `EN_REVISION` → `PENDIENTE_DESCARGO` se 
 
 ### PDF
 
-En el detalle de un informe (`informes/detalle.php?id=INF-0001`) presioná **Descargar PDF**: se genera el acta completa desde `informes/generar_pdf.php?id=INF-0001`, con el formato de 9 secciones del modelo `Informe_de_Convivencia.docx`. El generador es intencionalmente simple (`config/pdf.php`): una sola hoja A4, tipografía Times-Roman/Times-Bold, líneas y recuadros, e incrusta el PNG del escudo sin depender de Composer. El acta se dibuja de forma lineal, con posiciones explícitas, para evitar superposiciones.
+En el detalle de un informe (`informes/detalle.php?id=INF-0001`) presioná **Descargar PDF**: se genera el acta desde `informes/generar_pdf.php?id=INF-0001`, con 6 apartados (datos del alumno, acción, solicitud de sanción, observaciones, clasificación y notificación). El generador es intencionalmente simple (`config/pdf.php`): una sola hoja A4, tipografía Times-Roman/Times-Bold, puntos guía e incrusta el PNG del escudo sin depender de Composer. El acta se dibuja de forma lineal, con posiciones explícitas, para evitar superposiciones.
 
-El PDF **reproduce el acta de la vista web** (misma estructura de 9 apartados, tipografía Times, títulos rojos, recuadros grises con filete rojo y escudo chico centrado arriba), para que lo que se ve en pantalla coincida con lo que se descarga. Cabe en **una sola hoja A4**. El apartado **9. Notificación** contiene únicamente dos casilleros vacíos con encabezados **Alumno / Fecha** y **Padre/Madre/Tutor / Fecha**: no se imprimen nombres ni fechas completas.
+El PDF **reproduce el acta de la vista web** (misma estructura de 6 apartados y escudo chico centrado arriba), para que lo que se ve en pantalla coincida con lo que se descarga. Cabe en **una sola hoja A4**. Los puntos guía aparecen **sólo en los campos sin texto**; el apartado **6. Notificación** queda siempre vacío (Alumno, Fecha, Padre/Madre/Tutor, Fecha), sin nombres ni fechas completas.
+
+La página de detalle muestra el acta en dos columnas: la vista previa a la izquierda y, a la derecha, los datos del informe, las acciones, el resumen del trámite y las observaciones del historial. Un informe **ANULADO** sigue consultable (vista previa, PDF, adjuntos e historial), pero se ocultan las acciones de tramitación (revisión, descargo, consejos, clasificación, resolución y anular) y se muestra un aviso.
 
 Los enlaces al PDF usan `pdf_url()`, que agrega `?v=` con el `filemtime` del generador y del informe; así el navegador no sirve una versión vieja. Las hojas de estilo usan `asset_url()` con el mismo mecanismo.
 

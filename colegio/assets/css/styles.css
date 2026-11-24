@@ -133,6 +133,15 @@ details summary{cursor:pointer;font-weight:600;color:var(--azul2)}
 .acta-tbl th,.acta-tbl td{border:1px solid #d7c3c7;padding:.32rem .45rem;text-align:left}
 .acta-tbl td{height:2.1rem}
 .acta-tbl th{background:var(--azulcl);color:var(--azul);font-family:Arial,sans-serif;font-weight:700}
+
+/* Vista previa del acta a la izquierda; datos y acciones a la derecha. */
+.detalle-layout{display:grid;grid-template-columns:minmax(0,1.75fr) minmax(270px,.8fr);gap:1.1rem;align-items:start}
+.detalle-acta .acta{max-width:none}
+.detalle-side{position:sticky;top:1rem;max-height:calc(100vh - 2rem);overflow:auto}
+.acta-puntos{border-bottom:1px dotted #b98b93;min-height:1.35rem;margin:.18rem 0;white-space:pre-wrap}
+.acta-linea.acta-vacia{border-bottom:1px dotted #b98b93;min-width:8rem}
+.acta-linea.acta-larga{min-width:16rem}
+.acta-linea.acta-media{min-width:9rem}
 .mu{color:var(--gris);font-size:.85rem}
 
 /* ---------- Página pública ---------- */
@@ -168,6 +177,7 @@ details summary{cursor:pointer;font-weight:600;color:var(--azul2)}
 
 /* ---------- Responsive ---------- */
 @media(max-width:960px){.g4{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:900px){.detalle-layout{grid-template-columns:1fr}.detalle-side{position:static;max-height:none;overflow:visible}}
 @media(max-width:760px){
   .sidebar{position:fixed;z-index:50;transform:translateX(-100%);transition:transform .2s}
   .sidebar.open{transform:translateX(0)}
