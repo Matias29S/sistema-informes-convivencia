@@ -201,7 +201,7 @@ class PDF {
         $n = count($this->pages);
         $objs = [
             1 => '<< /Type /Catalog /Pages 2 0 R >>',
-            2 => '<< /Type /Pages /Kids [' . implode(' ', array_map(fn($i) => (5 + $i) . ' 0 R', range(1, $n))) . "] /Count {$n} >>",
+            2 => '<< /Type /Pages /Kids [' . implode(' ', array_map(fn($i) => (4 + $i) . ' 0 R', range(1, $n))) . "] /Count {$n} >>",
             3 => '<< /Type /Font /Subtype /Type1 /BaseFont /Times-Roman /Encoding /WinAnsiEncoding >>',
             4 => '<< /Type /Font /Subtype /Type1 /BaseFont /Times-Bold /Encoding /WinAnsiEncoding >>',
         ];

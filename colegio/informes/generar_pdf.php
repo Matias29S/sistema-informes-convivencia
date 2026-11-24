@@ -98,7 +98,7 @@ function pt(PDF $p, float $y, string $nro, string $titulo): float {
     $p->setFont('B', 9);
     $p->text(42, $y, $nro . '.-');
     $p->text(62, $y, $titulo);
-    return $y + 13;
+    return $y + 16;
 }
 
 function pc(PDF $p, float $y, string $etiqueta, ?string $valor, float $x, float $w, int $max = 40): void {
@@ -118,7 +118,7 @@ function pc(PDF $p, float $y, string $etiqueta, ?string $valor, float $x, float 
 function pq(PDF $p, float $y, ?string $texto, int $max = 2): float {
     $lineas = $p->wrap(pv($texto), 484);
     if (count($lineas) > $max) $lineas = array_slice($lineas, 0, $max);
-    $h = count($lineas) * 11 + 9;
+    $h = count($lineas) * 13 + 11;
     $p->fill(...PDF_GRIS);
     $p->filledRect(42, $y, 511.28, $h);
     $p->fill(...PDF_ROJO);
@@ -128,15 +128,15 @@ function pq(PDF $p, float $y, ?string $texto, int $max = 2): float {
     $p->rect(42, $y, 511.28, $h);
     $p->fill(...PDF_TEXTO);
     $p->setFont('T', 8.6);
-    foreach ($lineas as $i => $l) $p->text(50, $y + 8 + $i * 11, $l);
-    return $y + $h + 6;
+    foreach ($lineas as $i => $l) $p->text(50, $y + 9 + $i * 13, $l);
+    return $y + $h + 8;
 }
 
 function pn(PDF $p, float $y, string $texto): float {
     $p->fill(...PDF_MUTED);
     $p->setFont('T', 8);
     $p->text(42, $y, $texto);
-    return $y + 11;
+    return $y + 14;
 }
 
 function pk(PDF $p, float $y, string $instancia): float {
@@ -155,22 +155,22 @@ function pk(PDF $p, float $y, string $instancia): float {
         }
         $p->text($x + 13, $y + 8, $texto);
     }
-    return $y + 15;
+    return $y + 18;
 }
 
 function pf(PDF $p, float $y, float $x, float $w, string $titulo): void {
     $p->fill(...PDF_CLARO);
-    $p->filledRect($x, $y, $w, 13);
+    $p->filledRect($x, $y, $w, 15);
     $p->stroke(...PDF_BORDE);
     $p->widthLine(0.4);
-    $p->rect($x, $y, $w, 13);
-    $p->line($x + $w - 80, $y, $x + $w - 80, $y + 13);
+    $p->rect($x, $y, $w, 15);
+    $p->line($x + $w - 80, $y, $x + $w - 80, $y + 15);
     $p->fill(...PDF_ROJO);
     $p->setFont('B', 8);
-    $p->text($x + 5, $y + 9, $titulo);
-    $p->text($x + $w - 74, $y + 9, 'Fecha');
-    $p->rect($x, $y + 13, $w, 17);
-    $p->line($x + $w - 80, $y + 13, $x + $w - 80, $y + 30);
+    $p->text($x + 5, $y + 10, $titulo);
+    $p->text($x + $w - 74, $y + 10, 'Fecha');
+    $p->rect($x, $y + 15, $w, 19);
+    $p->line($x + $w - 80, $y + 15, $x + $w - 80, $y + 34);
 }
 
 $pdf = new PDF();
@@ -200,33 +200,33 @@ $y = 124.0;
 // 1. El alumno/a.
 $y = pt($pdf, $y, '1', 'El alumno/a');
 pc($pdf, $y, 'Apellido y nombre', $alumno, 42, 248, 38);
-pc($pdf, $y, 'Curso', $inf['curso'], 305, 248, 24); $y += 12;
+pc($pdf, $y, 'Curso', $inf['curso'], 305, 248, 24); $y += 15;
 pc($pdf, $y, 'División', $inf['division'], 42, 248, 24);
-pc($pdf, $y, 'Legajo', $inf['legajo'], 305, 248, 24); $y += 12;
+pc($pdf, $y, 'Legajo', $inf['legajo'], 305, 248, 24); $y += 15;
 pc($pdf, $y, 'DNI', $inf['alumno_dni'], 42, 248, 24);
-pc($pdf, $y, 'Fecha del incidente', fmt_fecha($inf['fecha_incidente']), 305, 248, 24); $y += 16;
+pc($pdf, $y, 'Fecha del incidente', fmt_fecha($inf['fecha_incidente']), 305, 248, 24); $y += 19;
 
 // 2. Acción.
 $y = pt($pdf, $y, '2', 'Ha realizado la acción que se describe a continuación:');
 $y = pq($pdf, $y, $inf['descripcion']);
-pc($pdf, $y, 'Normas transgredidas', $inf['normas'], 42, 511.28, 88); $y += 12;
+pc($pdf, $y, 'Normas transgredidas', $inf['normas'], 42, 511.28, 88); $y += 15;
 $y = pn($pdf, $y, 'transgrediendo Normas del Reglamento de Convivencia de la escuela.');
 
 // 3. Solicitud de sanción.
 $y = pt($pdf, $y, '3', 'Solicitud de sanción:');
 pc($pdf, $y, 'Docente', $docente, 42, 248, 34);
-pc($pdf, $y, 'Cargo/función', $inf['cargo'], 305, 248, 26); $y += 12;
+pc($pdf, $y, 'Cargo/función', $inf['cargo'], 305, 248, 26); $y += 15;
 pc($pdf, $y, 'Fecha', fmt_fecha($inf['fecha_incidente'], false), 42, 248, 20);
-pc($pdf, $y, 'Firma', $inf['firma_digital'], 305, 248, 26); $y += 12;
-pc($pdf, $y, 'Categoría solicitada', $inf['solicitud_sancion'], 42, 511.28, 86); $y += 16;
+pc($pdf, $y, 'Firma', $inf['firma_digital'], 305, 248, 26); $y += 15;
+pc($pdf, $y, 'Categoría solicitada', $inf['solicitud_sancion'], 42, 511.28, 86); $y += 19;
 
 // 4. Descargo.
 $y = pt($pdf, $y, '4', 'Descargo del Alumno/a:');
 $y = pq($pdf, $y, $descargo['descripcion'] ?? 'Sin registrar');
 if ($descargo) {
     pc($pdf, $y, 'Observaciones', $descargo['observaciones'] ?? '', 42, 248, 26);
-    pc($pdf, $y, 'Identificación', $alumno . ' · ' . $inf['legajo'], 305, 248, 26); $y += 12;
-    pc($pdf, $y, 'Fecha de presentación', fmt_fecha($descargo['fecha_presentacion']), 42, 511.28, 36); $y += 12;
+    pc($pdf, $y, 'Identificación', $alumno . ' · ' . $inf['legajo'], 305, 248, 26); $y += 15;
+    pc($pdf, $y, 'Fecha de presentación', fmt_fecha($descargo['fecha_presentacion']), 42, 511.28, 36); $y += 15;
 }
 
 // 5. Consejo de Aula.
@@ -234,9 +234,9 @@ $y = pt($pdf, $y, '5', 'Informe de Consejo de Aula');
 $y = pq($pdf, $y, $ca['observaciones'] ?? 'Sin registrar');
 if ($ca) {
     pc($pdf, $y, 'Evaluación', $ca['evaluacion'] ?? '', 42, 248, 26);
-    pc($pdf, $y, 'Recomendaciones', $ca['recomendaciones'] ?? '', 305, 248, 26); $y += 12;
+    pc($pdf, $y, 'Recomendaciones', $ca['recomendaciones'] ?? '', 305, 248, 26); $y += 15;
     pc($pdf, $y, 'Responsable', trim($ca['apellido'] . ', ' . $ca['nombre']), 42, 248, 28);
-    pc($pdf, $y, 'Fecha de intervención', fmt_fecha($ca['fecha_intervencion']), 305, 248, 24); $y += 12;
+    pc($pdf, $y, 'Fecha de intervención', fmt_fecha($ca['fecha_intervencion']), 305, 248, 24); $y += 15;
 }
 
 // 6. Consejo de Convivencia.
@@ -244,10 +244,10 @@ $y = pt($pdf, $y, '6', 'Informe de Consejo de Convivencia');
 $y = pq($pdf, $y, $cc['observaciones'] ?? 'Sin registrar');
 if ($cc) {
     pc($pdf, $y, 'Análisis', $cc['analisis'] ?? '', 42, 248, 26);
-    pc($pdf, $y, 'Recomendaciones', $cc['recomendaciones'] ?? '', 305, 248, 26); $y += 12;
+    pc($pdf, $y, 'Recomendaciones', $cc['recomendaciones'] ?? '', 305, 248, 26); $y += 15;
     pc($pdf, $y, 'Intervención', $cc['intervencion'] ?? '', 42, 248, 26);
-    pc($pdf, $y, 'Responsable', trim($cc['apellido'] . ', ' . $cc['nombre']), 305, 248, 26); $y += 12;
-    pc($pdf, $y, 'Fecha de intervención', fmt_fecha($cc['fecha_intervencion']), 42, 511.28, 34); $y += 12;
+    pc($pdf, $y, 'Responsable', trim($cc['apellido'] . ', ' . $cc['nombre']), 305, 248, 26); $y += 15;
+    pc($pdf, $y, 'Fecha de intervención', fmt_fecha($cc['fecha_intervencion']), 42, 511.28, 34); $y += 15;
 }
 
 // 7. Observaciones.
@@ -264,20 +264,20 @@ if ($observaciones) {
 // 8. Corresponde.
 $y = pt($pdf, $y, '8', 'Se considera que corresponde: (Indicar a continuación)');
 $y = pk($pdf, $y, $instancia);
-pc($pdf, $y, 'Otra consideración', $clas['otra_consideracion'] ?? '', 42, 511.28, 86); $y += 12;
+pc($pdf, $y, 'Otra consideración', $clas['otra_consideracion'] ?? '', 42, 511.28, 86); $y += 15;
 if ($res) {
     pc($pdf, $y, 'Decisión', $res['decision'] ?? '', 42, 248, 26);
-    pc($pdf, $y, 'Medida institucional', $res['medida'] ?? '', 305, 248, 26); $y += 12;
+    pc($pdf, $y, 'Medida institucional', $res['medida'] ?? '', 305, 248, 26); $y += 15;
     $y = pq($pdf, $y, $res['fundamentacion'] ?? '', 2);
 }
 pc($pdf, $y, 'Firma Directivo', $clas ? trim($clas['apellido'] . ', ' . $clas['nombre']) : '', 42, 248, 28);
-pc($pdf, $y, 'Fecha', fmt_fecha($clas['fecha'] ?? '', false), 305, 248, 20); $y += 16;
+pc($pdf, $y, 'Fecha', fmt_fecha($clas['fecha'] ?? '', false), 305, 248, 20); $y += 19;
 
 // 9. Notificación: sólo casilleros vacíos.
 $y = pt($pdf, $y, '9', 'Notificación:');
 pf($pdf, $y, 42, 248, 'Alumno');
 pf($pdf, $y, 305, 248.28, 'Padre/Madre/Tutor');
-$y = pn($pdf, $y + 33, 'Espacios reservados para la firma y la fecha de notificación.');
+$y = pn($pdf, $y + 37, 'Espacios reservados para la firma y la fecha de notificación.');
 
 // Pie.
 $pdf->stroke(...PDF_CLARO);
