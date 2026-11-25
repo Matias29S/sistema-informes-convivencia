@@ -78,7 +78,7 @@ function layout_header(string $titulo = '', string $modulo = ''): void {
 <div class="layout">
  <aside id="sidebar" class="sidebar">
   <div class="brand">
-   <img src="<?= e(url('assets/img/escudo.png')) ?>" alt="Escudo">
+   <img src="<?= e(asset_url('img/escudo.png')) ?>" alt="Escudo">
    <div><strong>ET N° 35</strong><small>Informes de Convivencia</small></div>
   </div>
   <nav class="side-nav">
@@ -120,7 +120,7 @@ function layout_footer(): void {
   </main>
  </div>
 </div>
-<script src="<?= e(url('assets/js/app.js')) ?>"></script>
+<script src="<?= e(asset_url('js/app.js')) ?>"></script>
 </body>
 </html>
 <?php

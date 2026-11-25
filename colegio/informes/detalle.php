@@ -194,7 +194,7 @@ layout_header('Informe ' . $inf['codigo']);
 <div class="detalle-layout">
 <div class="detalle-acta">
   <div class="acta">
-    <div class="acta-logo"><img src="<?= e(url('assets/img/escudo.png')) ?>" alt="Escudo de la escuela"></div>
+    <div class="acta-logo"><img src="<?= e(asset_url('img/escudo.png')) ?>" alt="Escudo de la escuela"></div>
     <div class="acta-gcba">
       <div class="txt">
         <div class="sup">GOBIERNO DE LA CIUDAD AUTÓNOMA DE BUENOS AIRES</div>
@@ -213,7 +213,6 @@ layout_header('Informe ' . $inf['codigo']);
     <div class="acta-sec"><div class="num">2.-</div><div>
       Ha realizado la acción que se describe a continuación:
       <?= linea_punteada($inf['descripcion']) ?>
-      <?= linea_punteada() ?>
       <?= linea_punteada() ?>
       <?= linea_punteada() ?>
       <?= linea_punteada() ?>

@@ -201,6 +201,8 @@ Los permisos se verifican **siempre en el servidor** (`require_permission()` / `
 | **ALUMNO** | Consulta sus informes y presenta descargos. |
 | **TUTOR** | Consulta únicamente los informes de los alumnos asociados (tabla `alumno_tutor`) y sus notificaciones. |
 
+La administración de cuentas (`admin/usuarios.php`) es exclusiva de **ADMIN**. DIRECTIVO no puede crear, editar ni regenerar credenciales de otros usuarios.
+
 Cada pantalla aplica además un **filtro de datos** por usuario (por ejemplo, el tutor no puede ver informes de otros alumnos aunque conozca un código).
 
 ---

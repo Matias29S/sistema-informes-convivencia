@@ -25,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Nueva contraseña · ET35</title><link rel="stylesheet" href="<?= e(asset_url('css/styles.css')) ?>"></head>
 <body class="login-wrap"><div class="login-box">
-<div class="brand"><img src="<?= e(url('assets/img/escudo.png')) ?>" alt="Escudo"></div>
+<div class="brand"><img src="<?= e(asset_url('img/escudo.png')) ?>" alt="Escudo"></div>
 <h1>Nueva contraseña</h1>
 <?php if ($ok): ?><div class="alert ok">Contraseña actualizada. Ya podés ingresar.</div><p style="text-align:center"><a class="btn" href="<?= e(url('login.php')) ?>">Iniciar sesión</a></p>
 <?php elseif (!$reg): ?><div class="alert err">Enlace inválido o vencido. Solicitá uno nuevo.</div>

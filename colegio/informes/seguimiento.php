@@ -28,7 +28,7 @@ if ($estadoFiltro === '') $params = array_merge($params, $estadosSeguimiento);
 else $params[] = $estadoFiltro;
 
 $st = $pdo->prepare(
-    'SELECT i.codigo, i.fecha_creacion, i.fecha_incidente, i.estado,
+    'SELECT i.codigo, i.fecha_creacion, i.fecha_incidente, i.actualizado_en, i.estado,
             us.nombre AS alumno_nombre, us.apellido AS alumno_apellido,
             c.nombre AS curso, c.especialidad, dv.nombre AS division,
             dus.nombre AS docente_nombre, dus.apellido AS docente_apellido,

@@ -28,7 +28,7 @@ $fmt = fn($f) => date('d/m/Y', strtotime($f));
 </nav>
 
 <header class="hero" id="inicio">
- <img src="<?= e(url('assets/img/escudo.png')) ?>" alt="Escudo de la escuela" style="width:90px;background:#fff;border-radius:8px;padding:6px">
+ <img src="<?= e(asset_url('img/escudo.png')) ?>" alt="Escudo de la escuela" style="width:90px;background:#fff;border-radius:8px;padding:6px">
  <h1><?= e($escuela) ?></h1>
  <p>Educación técnica de calidad en la Ciudad de Buenos Aires. Formamos estudiantes con compromiso, responsabilidad y respeto por la convivencia.</p>
  <div class="btn-row" style="justify-content:center">

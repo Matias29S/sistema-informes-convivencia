@@ -1,1 +1,1 @@
-<?php require_once __DIR__ . '/../config/app.php'; require_role('PRECEPTOR','ADMIN'); redirect('informes/seguimiento.php');
+<?php require_once __DIR__ . '/../config/app.php'; require_role('PRECEPTOR'); redirect('informes/seguimiento.php');

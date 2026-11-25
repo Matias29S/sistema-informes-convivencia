@@ -1,7 +1,7 @@
 ﻿<?php
 /** Administración de cuentas: alta, edición y envío/reenvío de credenciales. */
 require_once __DIR__ . '/../config/app.php';
-require_permission('usuarios.crear');
+require_role('ADMIN');
 global $pdo;
 
 /** Genera una contraseña temporal nueva, la guarda hasheada y devuelve los datos para mostrar. */

@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body class="login-wrap">
 <div class="login-box">
- <div class="brand"><img src="<?= e(url('assets/img/escudo.png')) ?>" alt="Escudo"></div>
+ <div class="brand"><img src="<?= e(asset_url('img/escudo.png')) ?>" alt="Escudo"></div>
  <h1>Iniciar sesión</h1>
  <p class="sub">Sistema de Informes de Convivencia</p>
  <?php if ($error): ?><div class="alert err"><?= e($error) ?></div><?php endif; ?>

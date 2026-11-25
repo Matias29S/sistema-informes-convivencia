@@ -138,7 +138,8 @@ details summary{cursor:pointer;font-weight:600;color:var(--azul2)}
 .detalle-layout{display:grid;grid-template-columns:minmax(0,1.75fr) minmax(270px,.8fr);gap:1.1rem;align-items:start}
 .detalle-acta .acta{max-width:none}
 .detalle-side{position:sticky;top:1rem;max-height:calc(100vh - 2rem);overflow:auto}
-.acta-puntos{border-bottom:1px dotted #b98b93;min-height:1.35rem;margin:.18rem 0;white-space:pre-wrap}
+.acta-puntos{min-height:1.35rem;margin:.18rem 0;white-space:pre-wrap}
+.acta-puntos:empty{border-bottom:1px dotted #b98b93}
 .acta-linea.acta-vacia{border-bottom:1px dotted #b98b93;min-width:8rem}
 .acta-linea.acta-larga{min-width:16rem}
 .acta-linea.acta-media{min-width:9rem}

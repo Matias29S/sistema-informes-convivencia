@@ -27,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Recuperar contraseña · ET35</title><link rel="stylesheet" href="<?= e(asset_url('css/styles.css')) ?>"></head>
 <body class="login-wrap"><div class="login-box">
-<div class="brand"><img src="<?= e(url('assets/img/escudo.png')) ?>" alt="Escudo"></div>
+<div class="brand"><img src="<?= e(asset_url('img/escudo.png')) ?>" alt="Escudo"></div>
 <h1>Recuperar contraseña</h1>
 <p class="muted" style="text-align:center">Te enviaremos un enlace temporal para crear una nueva contraseña.</p>
 <?php if ($error): ?><div class="alert err"><?= e($error) ?></div><?php endif; ?>

@@ -29,7 +29,7 @@ if ($alumnosIds) {
                 . ' AND NOT EXISTS (SELECT 1 FROM descargos d WHERE d.informe_id=i.id)';
     }
     $st = $pdo->prepare(
-        "SELECT i.codigo, i.fecha_incidente, i.fecha_creacion, i.estado,
+        "SELECT i.codigo, i.fecha_incidente, i.fecha_creacion, i.actualizado_en, i.estado,
                 us.nombre AS alumno_nombre, us.apellido AS alumno_apellido,
                 c.nombre AS curso, c.especialidad, dv.nombre AS division,
                 dus.nombre AS docente_nombre, dus.apellido AS docente_apellido

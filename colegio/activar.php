@@ -28,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Activar cuenta · ET35</title><link rel="stylesheet" href="<?= e(asset_url('css/styles.css')) ?>"></head>
 <body class="login-wrap"><div class="login-box">
-<div class="brand"><img src="<?= e(url('assets/img/escudo.png')) ?>" alt="Escudo"></div>
+<div class="brand"><img src="<?= e(asset_url('img/escudo.png')) ?>" alt="Escudo"></div>
 <h1>Activar cuenta</h1>
 <?php if ($ok): ?>
  <div class="alert ok">Tu cuenta fue activada correctamente.</div>

@@ -14,7 +14,7 @@ if ($idRaw === '') {
     redirect(in_array($rol, ['ALUMNO', 'TUTOR'], true) ? 'informes/mis_informes.php' : 'informes/listado.php');
 }
 $st = $pdo->prepare(
-    'SELECT i.id, i.codigo, i.estado, i.alumno_id, i.docente_id, i.division_id, i.creado_por,
+    'SELECT i.id, i.codigo, i.estado, i.alumno_id, i.docente_id, i.division_id, i.creado_por, i.actualizado_en,
             us.nombre AS alumno_nombre, us.apellido AS alumno_apellido
      FROM informes i JOIN alumnos al ON al.id=i.alumno_id
      JOIN usuarios us ON us.id=al.usuario_id
@@ -71,9 +71,9 @@ $estados = $st->fetchAll();
 // ---------- Filas de auditoría relacionadas ----------
 $st = $pdo->prepare("SELECT h.*, us.nombre, us.apellido
                      FROM historial_modificaciones h LEFT JOIN usuarios us ON us.id=h.usuario_id
-                     WHERE h.registro_id IN (?,?)
+                     WHERE (h.registro_id IN (?,?)
                        AND h.tabla_afectada IN ('informes','descargos','consejo_aula','consejo_convivencia','clasificaciones','resoluciones')
-                       OR h.detalle LIKE ?
+                       ) OR h.detalle LIKE ?
                      ORDER BY h.fecha DESC, h.id DESC LIMIT 200");
 $st->execute([(string)$informeId, $codigo, '%' . $codigo . '%']);
 $auditorias = $st->fetchAll();
@@ -171,7 +171,7 @@ layout_header('Historial · ' . $codigo);
     <h2>Accesos rápidos</h2>
     <div class="btn-row">
       <a class="btn g" href="<?= e(url($detalleUrl)) ?>">Ver informe</a>
-      <a class="btn g" href="<?= e(pdf_url($codigo)) ?>">Descargar PDF</a>
+      <a class="btn g" href="<?= e(pdf_url($codigo, $inf['actualizado_en'] ?? null)) ?>">Descargar PDF</a>
     </div>
   </div>
 </div>

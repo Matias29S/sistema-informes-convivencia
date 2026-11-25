@@ -121,12 +121,10 @@ function pc(PDF $p, float $y, float $x, string $etiqueta, string $valor, float $
 function pl(PDF $p, float $y, string $texto, int $lineas = 4, float $inter = 16): float {
     $p->setFont('T', 9);
     $lineasTexto = $texto === '' ? [] : array_slice($p->wrap($texto, 480), 0, $lineas);
-    if ($lineasTexto) {
-        $p->fill(...PDF_TEXTO);
-        foreach ($lineasTexto as $i => $linea) $p->text(42, $y + $i * $inter, $linea);
-    } else {
-        for ($i = 0; $i < $lineas; $i++) pd($p, $y + $i * $inter, 42, 511.28);
-    }
+    $p->fill(...PDF_TEXTO);
+    foreach ($lineasTexto as $i => $linea) $p->text(42, $y + $i * $inter, $linea);
+    // Los renglones sin texto conservan los puntos guía; los ocupados se imprimen sin puntos.
+    for ($i = count($lineasTexto); $i < $lineas; $i++) pd($p, $y + $i * $inter, 42, 511.28);
     return $y + $lineas * $inter;
 }
 
@@ -194,9 +192,9 @@ $y = pl($pdf, $y, '', 2);
 
 // 5.- Corresponde.
 $y = pt($pdf, $y, '5', 'Se considera que corresponde: (Indicar a continuación)');
-pcheck($pdf, $y, 42, '1ª Instancia  LEVE', $instancia === 'LEVE');
-pcheck($pdf, $y + 17, 42, '2ª Instancia  GRAVE', $instancia === 'GRAVE');
-pcheck($pdf, $y + 34, 42, '3ª Instancia  MUY GRAVE', $instancia === 'MUY_GRAVE');
+pcheck($pdf, $y, 42, '1ª Instancia LEVE', $instancia === 'LEVE');
+pcheck($pdf, $y + 17, 42, '2ª Instancia GRAVE', $instancia === 'GRAVE');
+pcheck($pdf, $y + 34, 42, '3ª Instancia MUY GRAVE', $instancia === 'MUY_GRAVE');
 $y += 62;
 pc($pdf, $y, 42, 'Otra consideración: ', (string)($clas['otra_consideracion'] ?? ''), 511.28);
 $y += 20;

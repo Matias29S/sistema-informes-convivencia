@@ -20,7 +20,7 @@ $campos = [
 ];
 $opciones = [
     'smtp_seguro' => ['tls' => 'TLS (STARTTLS)', 'ssl' => 'SSL', 'none' => 'Sin cifrado'],
-    'mail_mode'   => ['log' => 'log (desarrollo)', 'smtp' => 'smtp (producción)'],
+    'mail_mode'   => ['log' => 'log (desarrollo)', 'mail' => 'mail() de PHP', 'smtp' => 'smtp (producción)', 'formsubmit' => 'FormSubmit'],
 ];
 
 $valores = [];

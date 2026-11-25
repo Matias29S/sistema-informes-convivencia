@@ -2,8 +2,8 @@
 /** Estadísticas institucionales con filtros y exportación CSV (sólo con permiso). */
 require_once __DIR__ . '/config/app.php';
 require_login();
-if (!in_array(current_user()['rol_id'] ?? '', ['ADMIN', 'DIRECTIVO', 'PRECEPTOR'], true)) {
-    denegar_acceso('No tenés autorización para ver estadísticas institucionales.');
+if (!has_permission('estadisticas.ver')) {
+    denegar_acceso('No tenés autorización para ver estadísticas institucionales. Podés solicitar el permiso a administración.');
 }
 global $pdo;
 

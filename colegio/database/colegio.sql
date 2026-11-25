@@ -336,7 +336,7 @@ INSERT INTO permisos (id,modulo,descripcion) VALUES
 INSERT INTO rol_permiso (rol_id,permiso_id)
 SELECT r.id, p.id FROM roles r JOIN permisos p
 WHERE (r.id='ADMIN')
-   OR (r.id='DIRECTIVO' AND p.id IN ('informes.ver','informes.revisar','informes.resolver','consejos.registrar','estadisticas.ver','notificaciones.ver','alumnos.ver','alumnos.editar','cursos.ver','usuarios.ver','usuarios.crear'))
+   OR (r.id='DIRECTIVO' AND p.id IN ('informes.ver','informes.revisar','informes.resolver','consejos.registrar','estadisticas.ver','notificaciones.ver','alumnos.ver','alumnos.editar','cursos.ver','usuarios.ver'))
    OR (r.id='PRECEPTOR' AND p.id IN ('informes.ver','informes.revisar','consejos.registrar','alumnos.ver','alumnos.editar','cursos.ver','cursos.editar','notificaciones.ver'))
    OR (r.id='DOCENTE' AND p.id IN ('informes.crear','informes.ver','alumnos.ver','cursos.ver','notificaciones.ver'))
    OR (r.id='ALUMNO' AND p.id IN ('informes.ver','descargo.crear','notificaciones.ver'))

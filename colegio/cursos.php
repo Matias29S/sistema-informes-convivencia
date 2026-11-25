@@ -137,7 +137,7 @@ $st = $pdo->prepare('SELECT d.id, CONCAT(c.nombre, " ", d.nombre,
 $st->execute();
 $divisiones = $st->fetchAll();
 
-$st = $pdo->prepare('SELECT d.id, doc.legajo, us.nombre, us.apellido FROM docentes d
+$st = $pdo->prepare('SELECT d.id, d.legajo, us.nombre, us.apellido FROM docentes d
                      JOIN usuarios us ON us.id=d.usuario_id ORDER BY us.apellido, us.nombre');
 $st->execute();
 $docentes = $st->fetchAll();

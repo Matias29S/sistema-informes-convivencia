@@ -20,6 +20,11 @@ if ($rol === 'DOCENTE') {
                  . ' JOIN docentes doc ON doc.id = ad.docente_id ';
     $whereDocente = ' AND doc.usuario_id=? ';
     $paramsDocente[] = $uid;
+} elseif ($rol === 'PRECEPTOR') {
+    $joinDocente = ' JOIN division_preceptor dp ON dp.division_id = a.division_id'
+                 . ' JOIN docentes doc ON doc.id = dp.preceptor_id ';
+    $whereDocente = ' AND doc.usuario_id=? ';
+    $paramsDocente[] = $uid;
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -97,7 +102,8 @@ $sql = 'SELECT DISTINCT a.id, a.legajo, a.activo, u.nombre, u.apellido, u.dni, u
         JOIN divisiones dv ON dv.id = a.division_id
         JOIN cursos c ON c.id = dv.curso_id'
         . $joinDocente
-        . ' WHERE 1=1 ' . $whereDocente . implode(' AND ', $where)
+        . ' WHERE 1=1 ' . $whereDocente
+        . ($where ? ' AND ' . implode(' AND ', $where) : '')
         . ' ORDER BY c.anio, c.especialidad, dv.nombre, u.apellido, u.nombre LIMIT 500';
 $st = $pdo->prepare($sql);
 $st->execute($params);
