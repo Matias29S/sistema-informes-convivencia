@@ -30,9 +30,24 @@ class Mailer {
     private static function registrar(string $para, string $asunto, string $cuerpo, string $resultado): void {
         $dir = dirname(__DIR__) . '/storage';
         if (!is_dir($dir)) @mkdir($dir, 0755, true);
+        $para = self::redactar($para);
+        $asunto = self::redactar($asunto);
+        $cuerpo = self::redactar($cuerpo);
+        $resultado = self::redactar($resultado);
         $linea = '[' . date('Y-m-d H:i:s') . "] PARA: {$para} | ASUNTO: {$asunto} | RESULTADO: {$resultado}\n";
         $linea .= $cuerpo . "\n" . str_repeat('-', 70) . "\n";
         @file_put_contents($dir . '/mail.log', $linea, FILE_APPEND | LOCK_EX);
+    }
+
+    /** Redacta credenciales SMTP, contraseñas y tokens antes de persistir en storage/mail.log. */
+    private static function redactar(string $s): string {
+        foreach (['smtp_usuario', 'smtp_password', 'smtp_desde'] as $clave) {
+            $v = cfg($clave);
+            if ($v !== '') $s = str_ireplace([$v, base64_encode($v)], '[REDACTADO]', $s);
+        }
+        $s = preg_replace('/((?:Contraseña(?:\s+temporal)?|Password|Clave|Token|Secret|Api[\s_-]?Key|Usuario|Cuenta)\s*[:=]\s*)[^\r\n]+/iu', '$1[REDACTADO]', $s);
+        $s = preg_replace('/([?&](?:t|token|key|clave|api_key)=)[^&\s\r\n]+/i', '$1[REDACTADO]', $s);
+        return preg_replace('/(?<![\da-f])[0-9a-f]{32,}(?![\da-f])/i', '[REDACTADO]', $s);
     }
 
     /** Envío por FormSubmit.co: no requiere SMTP ni contraseña, pero cada destinatario se activa una vez. */

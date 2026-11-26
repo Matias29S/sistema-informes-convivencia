@@ -53,7 +53,7 @@ Incluye clasificación LEVE / GRAVE / MUY GRAVE / OTRA, notificaciones internas 
 
 ## Correo
 
-En producción se usa `mail_mode = formsubmit`: los correos con usuario y contraseña temporal salen por FormSubmit.co sin necesidad de SMTP ni contraseñas (cada destinatario confirma una vez). También están disponibles los modos `smtp`, `mail` y `log`. Ver [`colegio/README.md`](colegio/README.md#5-altas-credenciales-y-correo).
+En producción se usa `mail_mode = log`: no se envía correo real y las credenciales se entregan en pantalla al crear o reenviar una cuenta. El log (`storage/mail.log`) redacta contraseñas, usuarios SMTP y tokens antes de escribir. También están disponibles los modos `smtp`, `mail` y `formsubmit` (este último no se recomienda porque exige activación por destinatario). Ver [`colegio/README.md`](colegio/README.md#5-altas-credenciales-y-correo).
 
 ## Publicación online (InfinityFree)
 
@@ -66,6 +66,6 @@ La aplicación real se publica en un hosting con **PHP + MySQL**, no en Netlify.
 5. En `config/app.php` dejá `BASE_URL = '/'`, `APP_URL = 'https://TU-SUBDOMINIO.infinityfreeapp.com/'`.
 6. En `config/database.php` cargá host, usuario, contraseña y base del paso 2.
 7. Hacé escribibles `storage/` y `storage/uploads/` y probá el alta de un alumno.
-8. Para correo real, cargá SMTP en **Admin → Configuración**. Si el hosting gratis bloquea SMTP saliente, el sistema igual registra todo en `storage/mail.log`.
+8. Con `mail_mode = log` (recomendado en hosting gratuito) no se envía correo: las credenciales se muestran en pantalla y el mensaje se guarda con los datos sensibles redactados en `storage/mail.log`. Para SMTP real, cargá los datos en **Admin → Configuración**; la contraseña guardada nunca se devuelve al formulario.
 
 La demo de Netlify queda como maqueta visual; la URL del sistema real será el subdominio de InfinityFree.

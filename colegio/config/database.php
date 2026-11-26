@@ -12,6 +12,7 @@ try {
     // Guardar y leer todas las fechas en hora Argentina (UTC-3), sin importar la zona del servidor.
     try { $pdo->exec("SET time_zone = '-03:00'"); } catch (PDOException $e) { /* hosting sin soporte */ }
 } catch (PDOException $e) {
+    error_log('Error de base de datos: ' . $e->getMessage());
     http_response_code(500);
-    die('<h1>Error de base de datos</h1><p>Verificá que MySQL esté activo y que hayas importado <code>database/colegio.sql</code>.</p><pre>' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . '</pre>');
+    die('<h1>Error de base de datos</h1><p>Verificá que MySQL esté activo y que hayas importado <code>database/colegio.sql</code>.</p>');
 }

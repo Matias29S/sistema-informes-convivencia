@@ -46,6 +46,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($clave === 'mail_mode' && !array_key_exists($valor, $opciones['mail_mode'])) {
             $errores[] = 'El modo de correo no es válido.';
         }
+        // La contraseña se actualiza sólo si viene un valor nuevo; el vacío significa "conservar".
+        if ($clave === 'smtp_password' && $valor === '') continue;
         $nuevos[$clave] = $valor;
     }
     if ($errores) {
@@ -90,7 +92,11 @@ layout_header('Configuración');
    <?php else: ?>
     <input id="<?= e($clave) ?>" name="<?= e($clave) ?>" type="<?= e($tipo) ?>" class="input"
            maxlength="<?= (int)$max ?>" <?= $obligatorio ? 'required' : '' ?>
-           value="<?= e($valores[$clave] ?? '') ?>">
+           <?php if ($clave === 'smtp_password'): ?>
+           placeholder="<?= ($valores['smtp_password'] ?? '') !== '' ? 'Contraseña guardada · vacío = conservar' : 'Sin contraseña configurada' ?>" autocomplete="new-password"
+           <?php else: ?>
+           value="<?= e($valores[$clave] ?? '') ?>"
+           <?php endif; ?>>
    <?php endif; ?>
   <?php endforeach; ?>
   <p><button class="btn">Guardar configuración</button></p>

@@ -58,6 +58,8 @@ Verificá que ambos figuren con el estado *Running*.
 
 > ⚠️ **El script `database/colegio.sql` contiene `DROP TABLE IF EXISTS ...`**: si la base ya tenía datos, se eliminan todas las tablas. Importalo sólo en una base nueva o cuando quieras resetear el sistema a los datos de prueba.
 
+El dump ya incluye dos informes de ejemplo: `INF-0001` (ANULADO, con descargo, Consejo de Aula, Consejo de Convivencia, clasificación MUY_GRAVE, resolución, historial y notificaciones) e `INF-0002` (PENDIENTE_REVISION, GRAVE). El contador `informe` queda en `2`, así que el próximo será `INF-0003`.
+
 También podés importarlo por línea de comandos:
 
 ```bat
@@ -167,6 +169,8 @@ C:\xampp\htdocs\colegio\storage\mail.log
 ```
 
 En producción el archivo equivalente es `htdocs/storage/mail.log`. De todos modos, al crear o reenviar credenciales los datos aparecen en pantalla, así que no hace falta abrir el archivo. La carpeta `storage/` se crea automáticamente si no existe.
+
+Antes de escribir en el log se **redactan** la contraseña y el usuario SMTP, las contraseñas temporales (`Contraseña temporal: …`, `Usuario: …`) y los tokens de recuperación (`?t=…`). En **Admin → Configuración**, el campo «Contraseña SMTP» nunca muestra la clave guardada: déjalo vacío para conservarla.
 
 ### Modo producción (SMTP real)
 

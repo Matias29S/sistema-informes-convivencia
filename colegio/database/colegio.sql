@@ -380,7 +380,114 @@ INSERT INTO docentes (id,usuario_id,legajo,cargo,titulo) VALUES
 INSERT INTO division_preceptor (division_id,preceptor_id) VALUES (9,2);
 INSERT INTO asignaciones_docentes (docente_id,materia_id,division_id) VALUES (1,1,9),(1,4,9);
 
-INSERT INTO contadores (nombre,valor) VALUES ('informe',0);
+INSERT INTO contadores (nombre,valor) VALUES ('informe',2);
+
+-- ---------- Datos demo: informes y circuito de convivencia ----------
+-- INF-0001: circuito completo (con descargo, consejos, clasificación y resolución)
+-- y posterior anulación por dirección; estado final ANULADO.
+-- INF-0002: recién creado por el docente, esperando revisión.
+INSERT INTO informes
+  (id, codigo, alumno_id, docente_id, division_id, fecha_incidente, descripcion, normas,
+   solicitud_sancion, cargo, fecha_creacion, revisado, fecha_revision, firma_digital,
+   estado, creado_por, actualizado_en)
+VALUES
+  (1, 'INF-0001', 1, 1, 9, '2026-05-11 09:40:00',
+   'Durante el recreo, el alumno protagonizó una discusión con otro estudiante y golpeó una carpeta contra la pared, interrumpiendo la actividad y generando riesgo para compañeros.',
+   'Reglamento de Convivencia Escolar: art. 12 (respeto entre pares) y art. 18 (conductas que perturban el clima institucional).',
+   '3ª MUY GRAVE', 'Docente', '2026-05-11 10:10:00', 1, '2026-05-12 08:30:00',
+   'Carlos Ramírez (ID: 4)', 'ANULADO', 4, '2026-05-22 16:20:00'),
+  (2, 'INF-0002', 1, 1, 9, '2026-06-03 11:20:00',
+   'En clase de Matemática el alumno se negó a guardar el material y respondió con expresiones inadecuadas a una indicación del docente, distrayendo al grupo.',
+   'Reglamento de Convivencia Escolar: art. 9 (cumplimiento de consignas) y art. 14 (lenguaje respetuoso).',
+   '2ª GRAVE', 'Docente', '2026-06-03 11:55:00', 0, NULL,
+   'Carlos Ramírez (ID: 4)', 'PENDIENTE_REVISION', 4, NULL);
+
+-- Descargo presentado por el alumno (UNIQUE por informe).
+INSERT INTO descargos
+  (id, informe_id, alumno_id, descripcion, observaciones, fecha_presentacion, firmado)
+VALUES
+  (1, 1, 1,
+   'Reconozco que elevé la voz, pero el golpe fue accidental y no hubo intención de dañar a nadie. Estoy dispuesto a disculparme y a cumplir las indicaciones del consejo.',
+   'Versión del hecho desde la perspectiva del alumno.', '2026-05-13 10:15:00', 1);
+
+-- Consejo de Aula (responsable: preceptor de la división 9, usuario 3).
+INSERT INTO consejo_aula
+  (id, informe_id, observaciones, evaluacion, recomendaciones, fecha_intervencion, responsable_id)
+VALUES
+  (1, 1,
+   'El curso manifestó malestar por el episodio; el alumno reconoció la situación y aceptó disculparse.',
+   'Conducta gravosa pero con posibilidad de reflexión y reparación.',
+   'Disculpa pública en el aula y compromiso de convivencia firmado por el alumno y su tutor.',
+   '2026-05-15 14:00:00', 3);
+
+-- Consejo de Convivencia (responsable: directivo, usuario 2).
+INSERT INTO consejo_convivencia
+  (id, informe_id, observaciones, analisis, recomendaciones, intervencion, fecha_intervencion, responsable_id)
+VALUES
+  (1, 1,
+   'Se analizó el descargo junto con el informe docente y las manifestaciones del curso.',
+   'Corresponde una instancia de máxima gravedad por el riesgo generado, atenuada por la disposición del alumno a reparar.',
+   'Derivar a resolución directiva con medida educativa y seguimiento del preceptor.',
+   'Trabajo de reflexión con el alumno y seguimiento quincenal por tres meses.',
+   '2026-05-18 10:00:00', 2);
+
+-- Clasificación institucional: instancia_de() de functions.php.
+-- '3ª MUY GRAVE' -> MUY_GRAVE ; '2ª GRAVE' -> GRAVE.
+INSERT INTO clasificaciones
+  (informe_id, instancia, otra_consideracion, responsable_id, fecha)
+VALUES
+  (1, 'MUY_GRAVE', '', 2, '2026-05-19 09:30:00'),
+  (2, 'GRAVE', '', 2, '2026-06-04 08:45:00');
+
+-- Resolución del INF-0001 (luego anulado; el código permite anular también un informe resuelto).
+INSERT INTO resoluciones
+  (id, informe_id, decision, medida, fundamentacion, responsable_id, fecha, observaciones)
+VALUES
+  (1, 1,
+   'Aplicar una medida educativa y apercibimiento formal.',
+   'Disculpa al compañero, taller de convivencia de cuatro encuentros y seguimiento del preceptor por 90 días.',
+   'La conducta descripta transgrede el Reglamento de Convivencia y fue reconocida por el alumno; se prioriza la reparación y el acompañamiento institucional.',
+   2, '2026-05-20 11:00:00', 'Resolución notificada al alumno, tutor y docente.');
+
+-- Trazabilidad de estados (fechas en orden cronológico, hora Argentina UTC-3).
+INSERT INTO historial_estados
+  (id, informe_id, estado, usuario_id, fecha, observacion)
+VALUES
+  (1,  1, 'PENDIENTE_REVISION',          4, '2026-05-11 10:10:00', 'Informe creado'),
+  (2,  1, 'EN_REVISION',                 3, '2026-05-12 08:05:00', 'Informe tomado en revisión por María Delgado'),
+  (3,  1, 'REVISADO',                    5, '2026-05-12 08:30:00', 'Informe revisado por el alumno/a'),
+  (4,  1, 'PENDIENTE_DESCARGO',          3, '2026-05-12 09:00:00', 'Se solicita el descargo del/de la alumno/a'),
+  (5,  1, 'PENDIENTE_CONSEJO_AULA',      5, '2026-05-13 10:20:00', 'Descargo presentado por el alumno'),
+  (6,  1, 'PENDIENTE_CONSEJO_CONVIVENCIA', 3, '2026-05-15 14:05:00', 'Intervención del Consejo de Aula registrada'),
+  (7,  1, 'PENDIENTE_RESOLUCION',        2, '2026-05-18 10:05:00', 'Intervención del Consejo de Convivencia registrada'),
+  (8,  1, 'RESUELTO',                    2, '2026-05-20 11:00:00', 'Resolución registrada'),
+  (9,  1, 'ANULADO',                     1, '2026-05-22 16:20:00', 'Informe anulado por Ana Administradora (ID 1)'),
+  (10, 2, 'PENDIENTE_REVISION',          4, '2026-06-03 11:55:00', 'Informe creado');
+
+-- Notificaciones internas: enlace exacto consultado por informes/detalle.php.
+INSERT INTO notificaciones
+  (id, usuario_id, titulo, descripcion, tipo, enlace, leida, fecha)
+VALUES
+  (1,  1, 'Nuevo informe de convivencia INF-0001', 'Se registró el informe INF-0001 correspondiente al alumno 1. Revisalo en el sistema.', 'informe', 'informes/detalle.php?id=INF-0001', 1, '2026-05-11 10:12:00'),
+  (2,  2, 'Nuevo informe de convivencia INF-0001', 'Se registró el informe INF-0001 correspondiente al alumno 1. Revisalo en el sistema.', 'informe', 'informes/detalle.php?id=INF-0001', 1, '2026-05-11 10:12:00'),
+  (3,  3, 'Nuevo informe de convivencia INF-0001', 'Se registró el informe INF-0001 correspondiente al alumno 1. Revisalo en el sistema.', 'informe', 'informes/detalle.php?id=INF-0001', 1, '2026-05-11 10:12:00'),
+  (4,  5, 'Nuevo informe de convivencia INF-0001', 'Se registró un informe de convivencia que te concierne. Podés verlo en el sistema.', 'informe', 'informes/detalle.php?id=INF-0001', 1, '2026-05-11 10:12:00'),
+  (5,  6, 'Nuevo informe de convivencia INF-0001', 'Se registró un informe de convivencia del alumno a tu cargo.', 'informe', 'informes/detalle.php?id=INF-0001', 1, '2026-05-11 10:12:00'),
+  (6,  5, 'Descargo pendiente · INF-0001', 'Se solicitó tu descargo en el marco del informe INF-0001. Ingresá al sistema para presentarlo.', 'informe', 'informes/detalle.php?id=INF-0001', 1, '2026-05-12 09:01:00'),
+  (7,  6, 'Descargo pendiente · INF-0001', 'Se solicitó el descargo correspondiente al informe INF-0001 de un alumno a tu cargo.', 'informe', 'informes/detalle.php?id=INF-0001', 1, '2026-05-12 09:01:00'),
+  (8,  3, 'Descargo presentado · INF-0001', 'El/la alumno/a presentó el descargo correspondiente al informe INF-0001.', 'informe', 'informes/detalle.php?id=INF-0001', 1, '2026-05-13 10:16:00'),
+  (9,  2, 'Descargo presentado · INF-0001', 'El/la alumno/a presentó el descargo correspondiente al informe INF-0001.', 'informe', 'informes/detalle.php?id=INF-0001', 1, '2026-05-13 10:16:00'),
+  (10, 2, 'Consejo de Aula · INF-0001', 'Se registró la intervención del Consejo de Aula; el informe espera al Consejo de Convivencia.', 'informe', 'informes/detalle.php?id=INF-0001', 1, '2026-05-15 14:01:00'),
+  (11, 2, 'Consejo de Convivencia · INF-0001', 'Se registró la intervención del Consejo de Convivencia; el informe está listo para resolver.', 'informe', 'informes/detalle.php?id=INF-0001', 1, '2026-05-18 10:01:00'),
+  (12, 5, 'Informe resuelto INF-0001', 'Se registró la resolución del informe INF-0001. Ingresá al sistema para ver el detalle.', 'informe', 'informes/detalle.php?id=INF-0001', 1, '2026-05-20 11:01:00'),
+  (13, 6, 'Informe resuelto INF-0001', 'Se registró la resolución del informe INF-0001. Ingresá al sistema para ver el detalle.', 'informe', 'informes/detalle.php?id=INF-0001', 1, '2026-05-20 11:01:00'),
+  (14, 4, 'Informe resuelto INF-0001', 'Se registró la resolución del informe INF-0001. Ingresá al sistema para ver el detalle.', 'informe', 'informes/detalle.php?id=INF-0001', 1, '2026-05-20 11:01:00'),
+  (15, 3, 'Informe resuelto INF-0001', 'Se registró la resolución del informe INF-0001. Ingresá al sistema para ver el detalle.', 'informe', 'informes/detalle.php?id=INF-0001', 1, '2026-05-20 11:01:00'),
+  (16, 1, 'Nuevo informe de convivencia INF-0002', 'Se registró el informe INF-0002 correspondiente al alumno 1. Revisalo en el sistema.', 'informe', 'informes/detalle.php?id=INF-0002', 0, '2026-06-03 11:57:00'),
+  (17, 2, 'Nuevo informe de convivencia INF-0002', 'Se registró el informe INF-0002 correspondiente al alumno 1. Revisalo en el sistema.', 'informe', 'informes/detalle.php?id=INF-0002', 0, '2026-06-03 11:57:00'),
+  (18, 3, 'Nuevo informe de convivencia INF-0002', 'Se registró el informe INF-0002 correspondiente al alumno 1. Revisalo en el sistema.', 'informe', 'informes/detalle.php?id=INF-0002', 0, '2026-06-03 11:57:00'),
+  (19, 5, 'Nuevo informe de convivencia INF-0002', 'Se registró un informe de convivencia que te concierne. Podés verlo en el sistema.', 'informe', 'informes/detalle.php?id=INF-0002', 0, '2026-06-03 11:57:00'),
+  (20, 6, 'Nuevo informe de convivencia INF-0002', 'Se registró un informe de convivencia del alumno a tu cargo.', 'informe', 'informes/detalle.php?id=INF-0002', 0, '2026-06-03 11:57:00');
 
 -- ---------- Contenido público ----------
 INSERT INTO noticias (id,titulo,resumen,contenido,autor_id,fecha) VALUES

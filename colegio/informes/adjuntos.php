@@ -13,7 +13,7 @@ if ($idRaw === '') {
     flash('err', 'No se indicó un informe.');
     redirect('informes/listado.php');
 }
-$st = $pdo->prepare('SELECT i.id, i.codigo, i.alumno_id, i.division_id, i.docente_id
+$st = $pdo->prepare('SELECT i.id, i.codigo, i.estado, i.alumno_id, i.division_id, i.docente_id
                      FROM informes i WHERE ' . (ctype_digit($idRaw) ? 'i.id=?' : 'i.codigo=?'));
 $st->execute([ctype_digit($idRaw) ? (int)$idRaw : mb_substr($idRaw, 0, 20)]);
 $inf = $st->fetch() ?: null;
@@ -48,10 +48,12 @@ elseif ($rol === 'TUTOR') {
 if (!$puedeVer) denegar_acceso('No tenés autorización para ver los adjuntos de este informe.');
 
 $detalleUrl = 'informes/detalle.php?id=' . rawurlencode($inf['codigo']);
-$puedeSubir = in_array($rol, ['ADMIN', 'DIRECTIVO', 'PRECEPTOR', 'DOCENTE'], true) && has_permission('informes.ver');
+$anulado = $inf['estado'] === 'ANULADO';
+$puedeSubir = !$anulado && in_array($rol, ['ADMIN', 'DIRECTIVO', 'PRECEPTOR', 'DOCENTE'], true) && has_permission('informes.ver');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_check();
+    if ($anulado) denegar_acceso('No se pueden agregar adjuntos a un informe anulado.');
     if (!$puedeSubir) denegar_acceso('Tu rol no puede adjuntar archivos.');
     $guardado = subir_archivo($_FILES['archivo'] ?? [], (int)$inf['id']);
     if (!$guardado) {
